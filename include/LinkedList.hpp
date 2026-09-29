@@ -35,16 +35,27 @@ public:
 
     ~LinkedList()
     {
-        Node *current{head};
+       clear();
+    }
 
-        while (current)
+    LinkedList& operator=(const LinkedList& other)
+    {
+        if (this == &other)
         {
-            Node *next = current->next;
-
-            delete current;
-
-            current = next;
+            return *this;
         }
+        
+        clear();
+
+        Node* current{other.head};
+
+        while(current)
+        {
+            push_back(current->value);
+            current = current->next;
+        }
+
+        return *this;
     }
 
     bool empty() const
@@ -96,4 +107,25 @@ public:
 
         ++size;
     }
+
+    void clear()
+    {
+        Node* current{head};
+
+        while(current)
+        {
+            Node* next = current->next;
+
+            delete current;
+
+            current = next;
+        }
+
+        head = tail = nullptr;
+
+        size = 0;
+        
+    }
+
+    
 };

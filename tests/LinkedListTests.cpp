@@ -44,3 +44,31 @@ TEST_CASE("LinkedList can be copied")
     REQUIRE(copy.getSize() == 2);
     REQUIRE(copy.front() == 20);
 }
+
+TEST_CASE("LinkedList can be copy assigned")
+{
+    LinkedList<int> original;
+    original.push_back(10);
+    original.push_back(20);
+    original.push_back(30);
+
+    LinkedList<int> copy;
+    copy.push_back(999);
+
+    copy = original;
+
+    REQUIRE(copy.getSize() == 3);
+    REQUIRE(copy.front() == 10);
+}
+
+TEST_CASE("LinkedList handles self assignment")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+
+    list = list;
+
+    REQUIRE(list.getSize() == 2);
+    REQUIRE(list.front() == 10);
+}
