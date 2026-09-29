@@ -14,30 +14,63 @@ private:
     };
 
     Node *head;
+    Node *tail;
     std::size_t size;
 
 public:
     LinkedList()
-        : head{nullptr}, size{0} {}
-    
+        : head{nullptr}, tail{nullptr}, size{0} {}
+
+    LinkedList(const LinkedList &other)
+        : head{nullptr}, tail{nullptr}, size{0}
+    {
+        Node* current{other.head};
+
+        while(current)
+        {
+            push_back(current->value);
+            current = current->next;
+        }
+    }
+
+    ~LinkedList()
+    {
+        Node *current{head};
+
+        while (current)
+        {
+            Node *next = current->next;
+
+            delete current;
+
+            current = next;
+        }
+    }
+
     bool empty() const
     {
         return size == 0;
     }
-    
+
     std::size_t getSize() const
     {
         return size;
     }
 
-    void push_front(const T& value)
+    void push_front(const T &value)
     {
-        Node* new_node = new Node{value, head};
-        head = new_node;
+        Node *node = new Node{value, head};
+        if (size == 0)
+        {
+            tail = node;
+        }
+
+        head = node;
+
         ++size;
     }
 
-    const T& front() const
+    const T &front() const
     {
         if (!head)
         {
@@ -45,5 +78,22 @@ public:
         }
 
         return head->value;
+    }
+
+    void push_back(const T &value)
+    {
+        Node *node = new Node{value, nullptr};
+
+        if (!head)
+        {
+            head = tail = node;
+        }
+        else
+        {
+            tail->next = node;
+            tail = node;
+        }
+
+        ++size;
     }
 };

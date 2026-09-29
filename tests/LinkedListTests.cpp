@@ -31,3 +31,16 @@ TEST_CASE("front throws for empty list")
 
     REQUIRE_THROWS_AS(list.front(), std::out_of_range);
 }
+
+TEST_CASE("LinkedList can be copied")
+{
+    LinkedList<int> original;
+
+    original.push_front(10);
+    original.push_front(20);
+
+    LinkedList<int> copy{original};
+
+    REQUIRE(copy.getSize() == 2);
+    REQUIRE(copy.front() == 20);
+}

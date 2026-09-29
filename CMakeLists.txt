@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -41,6 +43,17 @@ target_link_libraries(data_structures_tests PRIVATE
     data_structures
     Catch2::Catch2WithMain
 )
+
+if(ENABLE_SANITIZERS)
+    target_compile_options(data_structures_tests PRIVATE
+        -fsanitize=address,undefined
+        -fno-omit-frame-pointer
+    )
+
+    target_link_options(data_structures_tests PRIVATE
+        -fsanitize=address,undefined
+    )
+endif()
 
 include(Catch)
 catch_discover_tests(data_structures_tests)
