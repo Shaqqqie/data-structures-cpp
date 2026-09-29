@@ -10,11 +10,11 @@ private:
     struct Node
     {
         T value;
-        Node *next;
+        Node* next;
     };
 
-    Node *head;
-    Node *tail;
+    Node* head;
+    Node* tail;
     std::size_t size;
 
 public:
@@ -22,7 +22,7 @@ public:
     LinkedList()
         : head{nullptr}, tail{nullptr}, size{0} {}
 
-    LinkedList(const LinkedList &other)
+    LinkedList(const LinkedList& other)
         : head{nullptr}, tail{nullptr}, size{0}
     {
         Node* current{other.head};
@@ -106,7 +106,7 @@ public:
     }
 
     // Insertion
-    void push_front(const T &value)
+    void push_front(const T& value)
     {
         Node *node = new Node{value, head};
         if (size == 0)
@@ -119,7 +119,7 @@ public:
         ++size;
     }
 
-    void push_back(const T &value)
+    void push_back(const T& value)
     {
         Node *node = new Node{value, nullptr};
 
@@ -133,6 +133,39 @@ public:
             tail = node;
         }
 
+        ++size;
+    }
+
+    void insert(std::size_t index, const T& value)
+    {
+        if (index > size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        if (index == 0)
+        {
+            push_front(value);
+            return;
+        }
+
+        if (index == size)
+        {
+            push_back(value);
+            return;
+        }
+
+        std::size_t count{0};
+        Node* current{head};
+
+        while(count != (index - 1))
+        {
+            current = current->next;
+            ++count;
+        }
+
+        Node* node = new Node{value, current->next};
+        current->next = node;
         ++size;
     }
 
@@ -184,6 +217,40 @@ public:
         tail->next = nullptr;
         delete back;
 
+        --size;
+    }
+
+    void erase(std::size_t index)
+    {
+        if (index >= size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        if (index == 0)
+        {
+            pop_front();
+            return;
+        }
+
+        if (index == (size - 1))
+        {
+            pop_back();
+            return;
+        }
+
+        Node* current{head};
+        std::size_t count{};
+
+        while(count != (index - 1))
+        {
+            current = current->next;
+            ++count;
+        }
+
+        Node* node = current->next;
+        current->next = node->next;
+        delete node;
         --size;
     }
 

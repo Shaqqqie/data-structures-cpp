@@ -22,7 +22,6 @@ TEST_CASE("Testing push_front and front")
 
     REQUIRE(list.getSize() == 2);
     REQUIRE(list.front() == 20);
-    
 }
 
 TEST_CASE("front() throws for empty list")
@@ -214,7 +213,102 @@ TEST_CASE("at() uses const overload for a const list")
     list.push_back(20);
     list.push_back(30);
 
-    const LinkedList<int>& const_list{list};
+    const LinkedList<int> &const_list{list};
 
     REQUIRE(const_list.at(1) == 20);
+}
+
+TEST_CASE("insert() modifies list for index(0), index(size), and index in the middle")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+    list.push_back(40);
+
+    list.insert(2, 25);
+
+    REQUIRE(list.getSize() == 5);
+
+    REQUIRE(list.at(0) == 10);
+    REQUIRE(list.at(1) == 20);
+    REQUIRE(list.at(2) == 25);
+    REQUIRE(list.at(3) == 30);
+    REQUIRE(list.at(4) == 40);
+
+    list.insert(0, 5);
+    REQUIRE(list.getSize() == 6);
+    REQUIRE(list.front() == 5);
+
+    list.insert(list.getSize(), 45);
+    REQUIRE(list.getSize() == 7);
+    REQUIRE(list.back() == 45);
+}
+
+TEST_CASE("insert() into an empty list")
+{
+    LinkedList<int> list;
+
+    list.insert(0, 10);
+
+    REQUIRE(list.getSize() == 1);
+
+    REQUIRE(list.at(0) == 10);
+}
+
+TEST_CASE("insert() throws for index bigger than list size")
+{
+    LinkedList<int> list;
+
+    REQUIRE_THROWS_AS(list.insert(5, 500), std::out_of_range);
+}
+
+TEST_CASE("erase() works for first, last, and somewhere in between index")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+    list.push_back(40);
+
+    list.erase(0);
+    REQUIRE(list.getSize() == 3);
+    REQUIRE(list.front() == 20);
+
+    list.erase(list.getSize() - 1);
+    REQUIRE(list.getSize() == 2);
+    REQUIRE(list.back() == 30);
+
+    list.clear();
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+    list.push_back(40);
+
+    list.erase(2);
+    REQUIRE(list.getSize() == 3);
+    REQUIRE(list.at(1) == 20);
+    REQUIRE(list.at(2) == 40);
+}
+
+TEST_CASE("erase() works for one-element list")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+
+    list.erase(0);
+
+    REQUIRE(list.empty());
+    REQUIRE(list.getSize() == 0);
+}
+
+TEST_CASE("erase() throws for empty list and for invalid index")
+{
+    LinkedList<int> list;
+    
+    REQUIRE_THROWS_AS(list.erase(0), std::out_of_range);
+
+    list.push_back(10);
+    
+    REQUIRE_THROWS_AS(list.erase(500), std::out_of_range);
 }
