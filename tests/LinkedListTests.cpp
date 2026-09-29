@@ -157,3 +157,64 @@ TEST_CASE("pop_back() throws for empty list")
 
     REQUIRE_THROWS_AS(list.pop_back(), std::out_of_range);
 }
+
+TEST_CASE("at() works correctly")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    REQUIRE(list.getSize() == 3);
+
+    REQUIRE(list.at(0) == 10);
+    REQUIRE(list.at(1) == 20);
+    REQUIRE(list.at(2) == 30);
+}
+
+TEST_CASE("at() throws when index == size")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    REQUIRE(list.getSize() == 3);
+
+    REQUIRE_THROWS_AS(list.at(list.getSize()), std::out_of_range);
+}
+
+TEST_CASE("at(0) on an empty list throws exception")
+{
+    LinkedList<int> list;
+
+    REQUIRE_THROWS_AS(list.at(0), std::out_of_range);
+}
+
+TEST_CASE("at() allows modifying values")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.at(1) = 100;
+
+    REQUIRE(list.getSize() == 3);
+
+    REQUIRE(list.at(0) == 10);
+    REQUIRE(list.at(1) == 100);
+    REQUIRE(list.at(2) == 30);
+}
+
+TEST_CASE("at() uses const overload for a const list")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    const LinkedList<int>& const_list{list};
+
+    REQUIRE(const_list.at(1) == 20);
+}

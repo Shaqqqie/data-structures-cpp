@@ -187,6 +187,43 @@ public:
         --size;
     }
 
+    // Traversal
+    const T& at(std::size_t index) const
+    {
+        if (index >= size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
 
+        Node* current{head};
+        std::size_t count{0};
+
+        while(count != index)
+        {
+            current = current->next;
+            ++count;
+        }
+
+        return current->value;
+
+    }
     
+    T& at(std::size_t index)
+    {
+        if (index >= size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        Node* current{head};
+        std::size_t count{0};
+
+        while(count != index)
+        {
+            current = current->next;
+            ++count;
+        }
+
+        return current->value;
+    }
 };
