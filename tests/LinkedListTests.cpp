@@ -305,10 +305,95 @@ TEST_CASE("erase() works for one-element list")
 TEST_CASE("erase() throws for empty list and for invalid index")
 {
     LinkedList<int> list;
-    
+
     REQUIRE_THROWS_AS(list.erase(0), std::out_of_range);
 
     list.push_back(10);
-    
+
     REQUIRE_THROWS_AS(list.erase(500), std::out_of_range);
+}
+
+TEST_CASE("Iterator works correctly for traversing a list")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    auto it = list.begin();
+    REQUIRE(*it == list.front());
+    REQUIRE(it != list.end());
+
+    ++it;
+    REQUIRE(*it == list.at(1));
+    REQUIRE(it != list.end());
+
+    ++it;
+    REQUIRE(*it == list.at(2));
+    REQUIRE(it != list.end());
+
+    ++it;
+    REQUIRE(it == list.end());
+}
+
+TEST_CASE("begin() and end() are equal for empty list")
+{
+    LinkedList<int> list;
+
+    REQUIRE(list.begin() == list.end());
+}
+
+TEST_CASE("LinkedList supports range-based for loop")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    std::size_t index{};
+    for(int value : list)
+    {
+        REQUIRE(value == list.at(index));
+        ++index;
+    }
+
+    REQUIRE(index == list.getSize());
+}
+
+TEST_CASE("LinkedList can modify data through range-based for loop")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    for (int& value : list)
+    {
+        value *= 2;
+    }
+
+    REQUIRE(list.at(0) == 20);
+    REQUIRE(list.at(1) == 40);
+    REQUIRE(list.at(2) == 60);
+
+    REQUIRE(list.getSize() == 3);
+}
+
+TEST_CASE("Const LinkedList supports range-based for loop")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    const LinkedList<int>& const_list{list};
+
+    std::size_t index{};
+    for (const int& value : const_list)
+    {
+        REQUIRE(value == const_list.at(index));
+        ++index;
+    }
+    
+    REQUIRE(index == const_list.getSize());
 }

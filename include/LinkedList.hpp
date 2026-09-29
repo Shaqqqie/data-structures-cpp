@@ -10,11 +10,79 @@ private:
     struct Node
     {
         T value;
-        Node* next;
+        Node *next;
     };
 
-    Node* head;
-    Node* tail;
+public:
+    class Iterator
+    {
+    private:
+        Node *current;
+
+    public:
+        Iterator(Node *p)
+            : current{p}
+        {
+        }
+
+        T &operator*() const
+        {
+            return current->value;
+        }
+
+        Iterator &operator++()
+        {
+            current = current->next;
+            return *this;
+        }
+
+        bool operator==(const Iterator &other) const
+        {
+            return current == other.current;
+        }
+
+        bool operator!=(const Iterator &other) const
+        {
+            return current != other.current;
+        }
+    };
+
+    class ConstIterator
+    {
+    private:
+        const Node *current;
+
+    public:
+        ConstIterator(const Node *p)
+            : current{p}
+        {
+        }
+
+        const T &operator*() const
+        {
+            return current->value;
+        }
+
+        ConstIterator &operator++()
+        {
+            current = current->next;
+            return *this;
+        }
+
+        bool operator==(const ConstIterator &other) const
+        {
+            return current == other.current;
+        }
+
+        bool operator!=(const ConstIterator &other) const
+        {
+            return current != other.current;
+        }
+    };
+
+private:
+    Node *head;
+    Node *tail;
     std::size_t size;
 
 public:
@@ -22,12 +90,12 @@ public:
     LinkedList()
         : head{nullptr}, tail{nullptr}, size{0} {}
 
-    LinkedList(const LinkedList& other)
+    LinkedList(const LinkedList &other)
         : head{nullptr}, tail{nullptr}, size{0}
     {
-        Node* current{other.head};
+        Node *current{other.head};
 
-        while(current)
+        while (current)
         {
             push_back(current->value);
             current = current->next;
@@ -36,21 +104,21 @@ public:
 
     ~LinkedList()
     {
-       clear();
+        clear();
     }
 
-    LinkedList& operator=(const LinkedList& other)
+    LinkedList &operator=(const LinkedList &other)
     {
         if (this == &other)
         {
             return *this;
         }
-        
+
         clear();
 
-        Node* current{other.head};
+        Node *current{other.head};
 
-        while(current)
+        while (current)
         {
             push_back(current->value);
             current = current->next;
@@ -61,11 +129,11 @@ public:
 
     void clear()
     {
-        Node* current{head};
+        Node *current{head};
 
-        while(current)
+        while (current)
         {
-            Node* next = current->next;
+            Node *next = current->next;
             delete current;
             current = next;
         }
@@ -85,7 +153,7 @@ public:
         return size;
     }
 
-    const T& front() const
+    const T &front() const
     {
         if (!head)
         {
@@ -95,7 +163,7 @@ public:
         return head->value;
     }
 
-    const T& back() const
+    const T &back() const
     {
         if (!tail)
         {
@@ -106,7 +174,7 @@ public:
     }
 
     // Insertion
-    void push_front(const T& value)
+    void push_front(const T &value)
     {
         Node *node = new Node{value, head};
         if (size == 0)
@@ -119,7 +187,7 @@ public:
         ++size;
     }
 
-    void push_back(const T& value)
+    void push_back(const T &value)
     {
         Node *node = new Node{value, nullptr};
 
@@ -136,7 +204,7 @@ public:
         ++size;
     }
 
-    void insert(std::size_t index, const T& value)
+    void insert(std::size_t index, const T &value)
     {
         if (index > size)
         {
@@ -156,15 +224,15 @@ public:
         }
 
         std::size_t count{0};
-        Node* current{head};
+        Node *current{head};
 
-        while(count != (index - 1))
+        while (count != (index - 1))
         {
             current = current->next;
             ++count;
         }
 
-        Node* node = new Node{value, current->next};
+        Node *node = new Node{value, current->next};
         current->next = node;
         ++size;
     }
@@ -177,7 +245,7 @@ public:
             throw std::out_of_range("Empty list.");
         }
 
-        Node* front{head};
+        Node *front{head};
         head = head->next;
         delete front;
         --size;
@@ -197,7 +265,7 @@ public:
 
         if (size == 1)
         {
-            Node* node{head};
+            Node *node{head};
             head = tail = nullptr;
             delete node;
             size = 0;
@@ -205,14 +273,14 @@ public:
             return;
         }
 
-        Node* current{head};
+        Node *current{head};
 
-        while(current->next != tail)
+        while (current->next != tail)
         {
             current = current->next;
         }
 
-        Node* back{current->next};
+        Node *back{current->next};
         tail = current;
         tail->next = nullptr;
         delete back;
@@ -239,58 +307,77 @@ public:
             return;
         }
 
-        Node* current{head};
+        Node *current{head};
         std::size_t count{};
 
-        while(count != (index - 1))
+        while (count != (index - 1))
         {
             current = current->next;
             ++count;
         }
 
-        Node* node = current->next;
+        Node *node = current->next;
         current->next = node->next;
         delete node;
         --size;
     }
 
     // Traversal
-    const T& at(std::size_t index) const
+    const T &at(std::size_t index) const
     {
         if (index >= size)
         {
             throw std::out_of_range("Invalid index.");
         }
 
-        Node* current{head};
+        Node *current{head};
         std::size_t count{0};
 
-        while(count != index)
+        while (count != index)
         {
             current = current->next;
             ++count;
         }
 
         return current->value;
-
     }
-    
-    T& at(std::size_t index)
+
+    T &at(std::size_t index)
     {
         if (index >= size)
         {
             throw std::out_of_range("Invalid index.");
         }
 
-        Node* current{head};
+        Node *current{head};
         std::size_t count{0};
 
-        while(count != index)
+        while (count != index)
         {
             current = current->next;
             ++count;
         }
 
         return current->value;
+    }
+
+    Iterator begin()
+    {
+        return head;
+    }
+
+    Iterator end()
+    {
+        return nullptr;
+    }
+
+    ConstIterator begin() const
+    {
+        return head;
+    }
+
+    ConstIterator end() const
+    {
+        return nullptr;
     }
 };
