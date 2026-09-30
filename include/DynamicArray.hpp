@@ -10,11 +10,31 @@ private:
     std::size_t size_;
     std::size_t capacity_;
 
-    void resize();
+    void resize()
+    {
+        if (capacity_ == 0)
+        {
+            capacity_ = 1;
+        }
+        else
+        {
+            capacity_ *= 2;
+        }
+
+        T *new_array = new T[capacity_];
+
+        for(std::size_t i{0}; i < size_; ++i)
+        {
+            new_array[i] = data_[i];
+        }
+
+        delete[] data_;
+        data_ = new_array;
+    }
 
 public:
     DynamicArray()
-    : data_{nullptr}, size_{0}, capacity_{0}
+        : data_{nullptr}, size_{0}, capacity_{0}
     {
     }
     ~DynamicArray()
@@ -40,10 +60,26 @@ public:
     T &at(std::size_t index);
     const T &at(std::size_t index) const;
 
-    T &operator[](std::size_t index);
-    const T &operator[](std::size_t index) const;
+    T &operator[](std::size_t index)
+    {
+        return data_[index];
+    }
+    const T &operator[](std::size_t index) const
+    {
+        return data_[index];
+    }
 
-    void push_back(const T &value);
+    void push_back(const T &value)
+    {
+        if (size_ == capacity_)
+        {
+            resize();
+        }
+
+        data_[size_] = value;
+        ++size_;
+    }
+
     void pop_back();
     void clear();
 };
