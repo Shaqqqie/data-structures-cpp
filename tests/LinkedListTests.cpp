@@ -61,7 +61,6 @@ TEST_CASE("Move constructor works correctly")
 
     LinkedList<int> moved{std::move(original)};
 
-    
     LinkedList<int> empty;
     REQUIRE(empty.empty());
     REQUIRE_FALSE(empty.contains(10));
@@ -189,3 +188,108 @@ TEST_CASE("Const LinkedList supports range-based for loop")
 
     REQUIRE(index == const_list.getSize());
 }
+
+TEST_CASE("LinkedList can insert at the beginning")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.insert(0, 5);
+
+    REQUIRE(list.getSize() == 4);
+    REQUIRE(list.at(0) == 5);
+}
+
+TEST_CASE("LinkedList can insert in middle")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.insert(1, 15);
+
+    REQUIRE(list.getSize() == 4);
+    REQUIRE(list.at(0) == 10);
+    REQUIRE(list.at(1) == 15);
+    REQUIRE(list.at(2) == 20);
+    REQUIRE(list.at(3) == 30);
+}
+
+TEST_CASE("LinkedList can insert at end")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.insert(3, 40);
+
+    REQUIRE(list.getSize() == 4);
+    REQUIRE(list.at(3) == 40);
+}
+
+TEST_CASE("LinkedList insert rejects invalid index")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    REQUIRE_THROWS_AS(list.insert(4, 40), std::out_of_range);
+}
+
+TEST_CASE("LinkedList can erase first element")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.erase(0);
+
+    REQUIRE(list.getSize() == 2);
+    REQUIRE(list.front() == 20);
+    REQUIRE(list.back() == 30);
+}
+
+TEST_CASE("LinkedList can erase middle element")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.erase(1);
+
+    REQUIRE(list.getSize() == 2);
+    REQUIRE(list.front() == 10);
+    REQUIRE(list.back() == 30);
+}
+
+TEST_CASE("LinkedList can erase last element")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list.erase(2);
+
+    REQUIRE(list.getSize() == 2);
+    REQUIRE(list.front() == 10);
+    REQUIRE(list.back() == 20);
+}
+
+TEST_CASE("LinkedList erase rejects invalid index")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    REQUIRE_THROWS_AS(list.erase(4), std::out_of_range);
+}
+

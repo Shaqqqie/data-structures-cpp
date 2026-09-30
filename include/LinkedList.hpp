@@ -331,7 +331,7 @@ public:
 
         if (index == 0)
         {
-            pushfront(value);
+            push_front(value);
             return;
         }
 
@@ -343,7 +343,7 @@ public:
 
         Node *current{head};
 
-        for (std::size_t count{}; count < index; ++count)
+        for (std::size_t count{}; count < index - 1; ++count)
         {
             current = current->next;
         }
@@ -368,7 +368,7 @@ public:
 
         if (index == size - 1)
         {
-            pop_back;
+            pop_back();
             return;
         }
 
