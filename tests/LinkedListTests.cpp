@@ -452,3 +452,60 @@ TEST_CASE("LinkedList handles self move assignment")
     REQUIRE(list.front() == 10);
     REQUIRE(list.back() == 30);
 }
+
+TEST_CASE("contains() works correctly for multi-node list and empty list")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    REQUIRE(list.getSize() == 3);
+
+    REQUIRE(list.contains(10));
+    REQUIRE(list.contains(20));
+    REQUIRE(list.contains(30));
+    REQUIRE_FALSE(list.contains(99));
+
+    LinkedList<int> empty;
+    REQUIRE(empty.empty());
+    REQUIRE_FALSE(empty.contains(10));
+}
+
+TEST_CASE("contains() works for const lists")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    const LinkedList<int> &const_list{list};
+
+    REQUIRE(const_list.getSize() == 3);
+    REQUIRE(const_list.contains(10));
+    REQUIRE(const_list.contains(20));
+    REQUIRE(const_list.contains(30));
+    REQUIRE_FALSE(const_list.contains(99));
+}
+
+TEST_CASE("find() returns index of first occurence")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    std::size_t index{};
+    for (const auto value : list)
+    {
+        auto result = list.find(value);
+
+        REQUIRE(result.has_value());
+        REQUIRE(result.value() == index);
+
+        ++index;
+    }
+
+    auto invalid_result = list.find(99);
+    REQUIRE_FALSE(invalid_result.has_value());
+}

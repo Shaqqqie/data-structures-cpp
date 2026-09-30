@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 
 template <typename T>
@@ -408,4 +409,41 @@ public:
     {
         return nullptr;
     }
+
+    bool contains(const T& value) const
+    {
+        const Node* current{head};
+
+        while(current)
+        {
+            if (current->value == value)
+            {
+                return true;
+            }
+
+            current = current->next;
+        }
+
+        return false;
+    }
+
+    std::optional<std::size_t> find(const T& value) const
+    {
+        std::size_t index{};
+        const Node* current{head};
+
+        while(current)
+        {
+            if (current->value == value)
+            {
+                return index;
+            }
+
+            current = current->next;
+            ++index;
+        }
+
+        return std::nullopt;
+    }
+
 };
