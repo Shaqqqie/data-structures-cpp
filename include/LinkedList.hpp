@@ -142,6 +142,34 @@ public:
         size = 0;
     }
 
+    LinkedList(LinkedList&& other) noexcept
+    : head{other.head}, tail{other.tail}, size{other.size}
+    {
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.size = 0;
+    }
+
+    LinkedList& operator=(LinkedList&& other) noexcept
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        clear();
+
+        head = other.head;
+        tail = other.tail;
+        size = other.size;
+
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.size = 0;
+
+        return *this;
+    }
+
     // Access
     bool empty() const
     {

@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "LinkedList.hpp"
+
+#include <utility>
 TEST_CASE("Testing default values for newly created LinkedList")
 {
     LinkedList<int> list;
@@ -351,7 +353,7 @@ TEST_CASE("LinkedList supports range-based for loop")
     list.push_back(30);
 
     std::size_t index{};
-    for(int value : list)
+    for (int value : list)
     {
         REQUIRE(value == list.at(index));
         ++index;
@@ -367,7 +369,7 @@ TEST_CASE("LinkedList can modify data through range-based for loop")
     list.push_back(20);
     list.push_back(30);
 
-    for (int& value : list)
+    for (int &value : list)
     {
         value *= 2;
     }
@@ -386,14 +388,67 @@ TEST_CASE("Const LinkedList supports range-based for loop")
     list.push_back(20);
     list.push_back(30);
 
-    const LinkedList<int>& const_list{list};
+    const LinkedList<int> &const_list{list};
 
     std::size_t index{};
-    for (const int& value : const_list)
+    for (const int &value : const_list)
     {
         REQUIRE(value == const_list.at(index));
         ++index;
     }
-    
+
     REQUIRE(index == const_list.getSize());
+}
+
+TEST_CASE("Move constructor works correctly")
+{
+    LinkedList<int> original;
+    original.push_back(10);
+    original.push_back(20);
+    original.push_back(30);
+
+    LinkedList<int> moved{std::move(original)};
+
+    REQUIRE(moved.getSize() == 3);
+    REQUIRE(moved.front() == 10);
+    REQUIRE(moved.back() == 30);
+
+    REQUIRE(original.empty());
+    REQUIRE(original.getSize() == 0);
+}
+
+TEST_CASE("Move assignment works")
+{
+    LinkedList<int> original;
+    original.push_back(10);
+    original.push_back(20);
+    original.push_back(30);
+
+    LinkedList<int> moved;
+    moved.push_back(100);
+    moved.push_back(200);
+
+    moved = std::move(original);
+
+    REQUIRE(moved.getSize() == 3);
+    REQUIRE(moved.front() == 10);
+    REQUIRE(moved.back() == 30);
+
+    REQUIRE(original.empty());
+    REQUIRE(original.getSize() == 0);
+}
+
+TEST_CASE("LinkedList handles self move assignment")
+{
+    LinkedList<int> list;
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+
+    list = std::move(list);
+
+    REQUIRE(list.getSize() == 3);
+
+    REQUIRE(list.front() == 10);
+    REQUIRE(list.back() == 30);
 }
