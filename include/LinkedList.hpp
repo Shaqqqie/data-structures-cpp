@@ -21,8 +21,8 @@ public:
         Node *current;
 
     public:
-        Iterator(Node *p)
-            : current{p}
+        explicit Iterator(Node *node)
+            : current{node}
         {
         }
 
@@ -54,8 +54,8 @@ public:
         const Node *current;
 
     public:
-        ConstIterator(const Node *p)
-            : current{p}
+        explicit ConstIterator(const Node *node)
+            : current{node}
         {
         }
 
@@ -89,7 +89,9 @@ private:
 public:
     // Construction / Ownership
     LinkedList()
-        : head{nullptr}, tail{nullptr}, size{0} {}
+        : head{nullptr}, tail{nullptr}, size{0}
+    {
+    }
 
     LinkedList(const LinkedList &other)
         : head{nullptr}, tail{nullptr}, size{0}
@@ -103,11 +105,13 @@ public:
         }
     }
 
-    ~LinkedList()
+    LinkedList(LinkedList &&other) noexcept
+        : head{other.head}, tail{other.tail}, size{other.size}
     {
-        clear();
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.size = 0;
     }
-
     LinkedList &operator=(const LinkedList &other)
     {
         if (this == &other)
@@ -117,7 +121,7 @@ public:
 
         clear();
 
-        Node *current{other.head};
+        const Node *current{other.head};
 
         while (current)
         {
@@ -128,30 +132,7 @@ public:
         return *this;
     }
 
-    void clear()
-    {
-        Node *current{head};
-
-        while (current)
-        {
-            Node *next = current->next;
-            delete current;
-            current = next;
-        }
-
-        head = tail = nullptr;
-        size = 0;
-    }
-
-    LinkedList(LinkedList&& other) noexcept
-    : head{other.head}, tail{other.tail}, size{other.size}
-    {
-        other.head = nullptr;
-        other.tail = nullptr;
-        other.size = 0;
-    }
-
-    LinkedList& operator=(LinkedList&& other) noexcept
+    LinkedList &operator=(LinkedList &&other) noexcept
     {
         if (this == &other)
         {
@@ -171,7 +152,12 @@ public:
         return *this;
     }
 
-    // Access
+    ~LinkedList()
+    {
+        clear();
+    }
+
+    // Capacity
     bool empty() const
     {
         return size == 0;
@@ -180,6 +166,45 @@ public:
     std::size_t getSize() const
     {
         return size;
+    }
+
+    // Element access
+    T &at(std::size_t index)
+    {
+        if (index >= size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        Node *current{head};
+        std::size_t count{};
+
+        while(count != index)
+        {
+            current = current->next;
+            ++count;
+        }
+
+        return current->value;
+    }
+
+    const T &at(std::size_t index) const
+    {
+        if (index >= size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        const Node *current{head};
+        std::size_t count{};
+
+        while (count != index)
+        {
+            current = current->next;
+            ++count;
+        }
+
+        return current->value;
     }
 
     const T &front() const
@@ -202,17 +227,33 @@ public:
         return tail->value;
     }
 
-    // Insertion
+    // Modifiers
+    void clear()
+    {
+        Node *current{head};
+
+        while (current)
+        {
+            Node *next{current->next};
+            delete current;
+            current = next;
+        }
+
+        head = nullptr;
+        tail = nullptr;
+        size = 0;
+    }
+
     void push_front(const T &value)
     {
         Node *node = new Node{value, head};
-        if (size == 0)
+
+        if (empty())
         {
             tail = node;
         }
 
         head = node;
-
         ++size;
     }
 
@@ -220,9 +261,10 @@ public:
     {
         Node *node = new Node{value, nullptr};
 
-        if (!head)
+        if (empty())
         {
-            head = tail = node;
+            head = node;
+            tail = node;
         }
         else
         {
@@ -233,53 +275,19 @@ public:
         ++size;
     }
 
-    void insert(std::size_t index, const T &value)
-    {
-        if (index > size)
-        {
-            throw std::out_of_range("Invalid index.");
-        }
-
-        if (index == 0)
-        {
-            push_front(value);
-            return;
-        }
-
-        if (index == size)
-        {
-            push_back(value);
-            return;
-        }
-
-        std::size_t count{0};
-        Node *current{head};
-
-        while (count != (index - 1))
-        {
-            current = current->next;
-            ++count;
-        }
-
-        Node *node = new Node{value, current->next};
-        current->next = node;
-        ++size;
-    }
-
-    // Removal
     void pop_front()
     {
-        if (!head)
+        if (empty())
         {
             throw std::out_of_range("Empty list.");
         }
 
-        Node *front{head};
+        Node *old_head{head};
         head = head->next;
-        delete front;
+        delete old_head;
         --size;
 
-        if (size == 0)
+        if (empty())
         {
             tail = nullptr;
         }
@@ -294,11 +302,10 @@ public:
 
         if (size == 1)
         {
-            Node *node{head};
-            head = tail = nullptr;
-            delete node;
+            delete head;
+            head = nullptr;
+            tail = nullptr;
             size = 0;
-
             return;
         }
 
@@ -309,12 +316,41 @@ public:
             current = current->next;
         }
 
-        Node *back{current->next};
+        delete tail;
         tail = current;
         tail->next = nullptr;
-        delete back;
-
         --size;
+    }
+
+    void insert(std::size_t index, const T &value)
+    {
+        if (index > size)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        if (index == 0)
+        {
+            pushfront(value);
+            return;
+        }
+
+        if (index == size)
+        {
+            push_back(value);
+            return;
+        }
+
+        Node *current{head};
+
+        for (std::size_t count{}; count < index; ++count)
+        {
+            current = current->next;
+        }
+
+        Node *node = new Node(value, current->next);
+        current->next = node;
+        ++size;
     }
 
     void erase(std::size_t index)
@@ -330,91 +366,31 @@ public:
             return;
         }
 
-        if (index == (size - 1))
+        if (index == size - 1)
         {
-            pop_back();
+            pop_back;
             return;
         }
 
         Node *current{head};
-        std::size_t count{};
 
-        while (count != (index - 1))
+        for (std::size_t count{}; count < index - 1; ++count)
         {
             current = current->next;
-            ++count;
         }
 
-        Node *node = current->next;
+        Node *node{current->next};
         current->next = node->next;
         delete node;
         --size;
     }
 
-    // Traversal
-    const T &at(std::size_t index) const
+    // Search
+    bool contains(const T &value) const
     {
-        if (index >= size)
-        {
-            throw std::out_of_range("Invalid index.");
-        }
+        const Node *current{head};
 
-        Node *current{head};
-        std::size_t count{0};
-
-        while (count != index)
-        {
-            current = current->next;
-            ++count;
-        }
-
-        return current->value;
-    }
-
-    T &at(std::size_t index)
-    {
-        if (index >= size)
-        {
-            throw std::out_of_range("Invalid index.");
-        }
-
-        Node *current{head};
-        std::size_t count{0};
-
-        while (count != index)
-        {
-            current = current->next;
-            ++count;
-        }
-
-        return current->value;
-    }
-
-    Iterator begin()
-    {
-        return head;
-    }
-
-    Iterator end()
-    {
-        return nullptr;
-    }
-
-    ConstIterator begin() const
-    {
-        return head;
-    }
-
-    ConstIterator end() const
-    {
-        return nullptr;
-    }
-
-    bool contains(const T& value) const
-    {
-        const Node* current{head};
-
-        while(current)
+        while (current)
         {
             if (current->value == value)
             {
@@ -427,12 +403,12 @@ public:
         return false;
     }
 
-    std::optional<std::size_t> find(const T& value) const
+    std::optional<std::size_t> find(const T &value) const
     {
         std::size_t index{};
-        const Node* current{head};
+        const Node *current{head};
 
-        while(current)
+        while (current)
         {
             if (current->value == value)
             {
@@ -446,4 +422,24 @@ public:
         return std::nullopt;
     }
 
+    // Iterators
+    Iterator begin()
+    {
+        return Iterator{head};
+    }
+
+    Iterator end()
+    {
+        return Iterator{nullptr};
+    }
+
+    ConstIterator begin() const
+    {
+        return ConstIterator{head};
+    }
+
+    ConstIterator end() const
+    {
+        return ConstIterator{nullptr};
+    }
 };
