@@ -277,3 +277,95 @@ TEST_CASE("DynamicArray works with range-based for loop")
 
     REQUIRE(sum == 60);
 }
+
+TEST_CASE("DynamicArray front() returns first element and allows modification")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    REQUIRE(array.front() == 10);
+
+    array.front() = 100;
+
+    REQUIRE(array.front() == 100);
+    REQUIRE(array[0] == 100);
+}
+
+TEST_CASE("DynamicArray back() returns last element and allows modification")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    REQUIRE(array.back() == 30);
+
+    array.back() = 200;
+
+    REQUIRE(array.back() == 200);
+    REQUIRE(array[2] == 200);
+}
+
+TEST_CASE("DynamicArray front() throws when empty")
+{
+    DynamicArray<int> array;
+
+    REQUIRE_THROWS_AS(array.front(), std::out_of_range);
+}
+
+TEST_CASE("DynamicArray back() throws when empty")
+{
+    DynamicArray<int> array;
+
+    REQUIRE_THROWS_AS(array.back(), std::out_of_range);
+}
+
+TEST_CASE("DynamicArray reserve() increases capacity and preserves elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+
+    array.reserve(10);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 10);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray reserve() does not shrink capacity")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+
+    array.reserve(10);
+
+    array.reserve(5);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 10);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray reserve() works on an empty array")
+{
+    DynamicArray<int> array;
+
+    array.reserve(10);
+
+    REQUIRE(array.size() == 0);
+    REQUIRE(array.capacity() == 10);
+
+    array.push_back(10);
+
+    REQUIRE(array.size() == 1);
+    REQUIRE(array.capacity() == 10);
+    REQUIRE(array[0] == 10);
+}

@@ -71,25 +71,16 @@ public:
         {
             return p != other.p;
         }
+    };
 
-};
-
-private : T *data_;
+private:
+    T *data_;
     std::size_t size_;
     std::size_t capacity_;
 
-    void resize()
+    void reallocate(std::size_t new_capacity_)
     {
-        if (capacity_ == 0)
-        {
-            capacity_ = 1;
-        }
-        else
-        {
-            capacity_ *= 2;
-        }
-
-        T *new_array = new T[capacity_];
+        T *new_array = new T[new_capacity_];
 
         for (std::size_t i{0}; i < size_; ++i)
         {
@@ -97,10 +88,13 @@ private : T *data_;
         }
 
         delete[] data_;
+
         data_ = new_array;
+        capacity_ = new_capacity_;
     }
 
 public:
+    // Construction / Ownership
     DynamicArray()
         : data_{nullptr}, size_{0}, capacity_{0}
     {
@@ -181,6 +175,7 @@ public:
         delete[] data_;
     }
 
+    // Capacity
     [[nodiscard]] std::size_t size() const
     {
         return size_;
@@ -196,6 +191,17 @@ public:
         return size_ == 0;
     }
 
+    void reserve(std::size_t new_capacity_)
+    {
+        if (new_capacity_ <= capacity_)
+        {
+            return;
+        }
+        
+        reallocate(new_capacity_);
+    }
+
+    // Element access
     T &at(std::size_t index)
     {
         if (index >= size_)
@@ -225,11 +231,58 @@ public:
         return data_[index];
     }
 
+    T &front()
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty array.");
+        }
+
+        return data_[0];
+    }
+
+    const T &front() const
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty array.");
+        }
+
+        return data_[0];
+    }
+
+    T &back()
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty array.");
+        }
+
+        return data_[size_ - 1];
+    }
+
+    const T &back() const
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty array.");
+        }
+        return data_[size_ - 1];
+    }
+
+    // Modifiers
     void push_back(const T &value)
     {
         if (size_ == capacity_)
         {
-            resize();
+            if (capacity_ == 0)
+            {
+                reallocate(1);
+            }
+            else
+            {
+                reallocate(capacity_ * 2);
+            }
         }
 
         data_[size_] = value;
@@ -249,6 +302,7 @@ public:
         size_ = 0;
     }
 
+    // Iterators
     Iterator begin()
     {
         return Iterator{data_};
