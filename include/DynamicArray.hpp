@@ -6,8 +6,75 @@
 template <typename T>
 class DynamicArray
 {
-private:
-    T *data_;
+public:
+    class Iterator
+    {
+    private:
+        T *p;
+
+    public:
+        explicit Iterator(T *array)
+            : p{array}
+        {
+        }
+
+        T &operator*() const
+        {
+            return *p;
+        }
+
+        Iterator &operator++()
+        {
+            ++p;
+            return *this;
+        }
+
+        bool operator==(const Iterator &other) const
+        {
+            return p == other.p;
+        }
+
+        bool operator!=(const Iterator &other) const
+        {
+            return p != other.p;
+        }
+    };
+
+    class ConstIterator
+    {
+    private:
+        const T *p;
+
+    public:
+        explicit ConstIterator(const T *array)
+            : p{array}
+        {
+        }
+
+        const T &operator*() const
+        {
+            return *p;
+        }
+
+        ConstIterator &operator++()
+        {
+            ++p;
+            return *this;
+        }
+
+        bool operator==(const ConstIterator &other) const
+        {
+            return p == other.p;
+        }
+
+        bool operator!=(const ConstIterator &other) const
+        {
+            return p != other.p;
+        }
+
+};
+
+private : T *data_;
     std::size_t size_;
     std::size_t capacity_;
 
@@ -54,7 +121,7 @@ public:
     }
 
     DynamicArray(DynamicArray &&other) noexcept
-    : data_{other.data_}, size_{other.size_}, capacity_{other.capacity_}
+        : data_{other.data_}, size_{other.size_}, capacity_{other.capacity_}
     {
         other.data_ = nullptr;
         other.size_ = 0;
@@ -180,5 +247,25 @@ public:
     void clear()
     {
         size_ = 0;
+    }
+
+    Iterator begin()
+    {
+        return Iterator{data_};
+    }
+
+    Iterator end()
+    {
+        return Iterator{data_ + size_};
+    }
+
+    ConstIterator begin() const
+    {
+        return ConstIterator{data_};
+    }
+
+    ConstIterator end() const
+    {
+        return ConstIterator{data_ + size_};
     }
 };

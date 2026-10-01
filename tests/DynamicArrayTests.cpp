@@ -213,3 +213,67 @@ TEST_CASE("DynamicArray can be move assigned")
     REQUIRE(original.size() == 0);
     REQUIRE(original.capacity() == 0);
 }
+
+TEST_CASE("DynamicArray Iterator can traverse elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    auto it = array.begin();
+
+    REQUIRE(*it == 10);
+
+    ++it;
+    REQUIRE(*it == 20);
+
+    ++it;
+    REQUIRE(*it == 30);
+
+    ++it;
+    REQUIRE(it == array.end());
+}
+
+TEST_CASE("DynamicArray ConstIterator can traverse elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    const DynamicArray<int> &const_array{array};
+
+    auto it = const_array.begin();
+
+    REQUIRE(*it == 10);
+
+    ++it;
+    REQUIRE(*it == 20);
+
+    ++it;
+    REQUIRE(*it == 30);
+
+    ++it;
+    REQUIRE(it == const_array.end());
+}
+
+TEST_CASE("DynamicArray works with range-based for loop")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    int sum{0};
+
+    for (int value : array)
+    {
+        sum += value;
+    }
+
+    REQUIRE(sum == 60);
+}
