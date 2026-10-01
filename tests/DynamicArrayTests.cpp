@@ -2,6 +2,7 @@
 
 #include "DynamicArray.hpp"
 
+#include <string>
 #include <utility>
 
 TEST_CASE("DynamicArray starts empty")
@@ -368,4 +369,82 @@ TEST_CASE("DynamicArray reserve() works on an empty array")
     REQUIRE(array.size() == 1);
     REQUIRE(array.capacity() == 10);
     REQUIRE(array[0] == 10);
+}
+
+TEST_CASE("DynamicArray can grow beyond current capacity")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+
+    array.resize(5);
+
+    REQUIRE(array.size() == 5);
+    REQUIRE(array.capacity() == 5);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+    REQUIRE(array[2] == 0);
+    REQUIRE(array[3] == 0);
+    REQUIRE(array[4] == 0);
+}
+
+TEST_CASE("DynamicArray can grow within reserved capacity")
+{
+    DynamicArray<int> array;
+
+    array.reserve(10);
+
+    array.push_back(10);
+    array.push_back(20);
+
+    array.resize(5);
+
+    REQUIRE(array.size() == 5);
+    REQUIRE(array.capacity() == 10);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+    REQUIRE(array[2] == 0);
+    REQUIRE(array[3] == 0);
+    REQUIRE(array[4] == 0);
+}
+
+TEST_CASE("DynamicArray can shrink in size")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+    array.push_back(40);
+    array.push_back(50);
+
+    REQUIRE(array.size() == 5);
+    REQUIRE(array.capacity() == 8);
+
+    array.resize(2);
+    
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 8);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray resize() also works for other types than int")
+{
+    DynamicArray<std::string> array;
+
+    array.push_back("hello");
+    array.push_back("world");
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 2);
+
+    array.resize(4);
+
+    REQUIRE(array.size() == 4);
+    REQUIRE(array.capacity() == 4);
+    REQUIRE(array[0] == "hello");
+    REQUIRE(array[1] == "world");
+    REQUIRE(array[2] == "");
+    REQUIRE(array[3] == "");
 }

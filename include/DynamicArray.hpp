@@ -78,9 +78,9 @@ private:
     std::size_t size_;
     std::size_t capacity_;
 
-    void reallocate(std::size_t new_capacity_)
+    void reallocate(std::size_t new_capacity)
     {
-        T *new_array = new T[new_capacity_];
+        T *new_array = new T[new_capacity];
 
         for (std::size_t i{0}; i < size_; ++i)
         {
@@ -90,7 +90,7 @@ private:
         delete[] data_;
 
         data_ = new_array;
-        capacity_ = new_capacity_;
+        capacity_ = new_capacity;
     }
 
 public:
@@ -191,14 +191,29 @@ public:
         return size_ == 0;
     }
 
-    void reserve(std::size_t new_capacity_)
+    void reserve(std::size_t new_capacity)
     {
-        if (new_capacity_ <= capacity_)
+        if (new_capacity <= capacity_)
         {
             return;
         }
         
-        reallocate(new_capacity_);
+        reallocate(new_capacity);
+    }
+
+    void resize(std::size_t new_size)
+    {
+        if (new_size > capacity_)
+        {
+            reallocate(new_size);
+        }
+
+        for(std::size_t i{size_}; i < new_size; ++i)
+        {
+            data_[i] = T{};
+        }
+
+        size_ = new_size;
     }
 
     // Element access
