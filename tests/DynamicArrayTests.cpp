@@ -482,3 +482,53 @@ TEST_CASE("DynamicArray data() provides const access to underlying storage")
     REQUIRE(ptr[1] == 20);
     REQUIRE(ptr[2] == 30);
 }
+
+TEST_CASE("DynamicArray shrink_to_fit shrinks capacity to size")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+
+    array.reserve(10);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 10);
+
+    array.shrink_to_fit();
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 2);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray shrink_to_fit does nothing when size equals capacity")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 2);
+
+    array.shrink_to_fit();
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 2);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray shrink_to_fit releases storage for empty array")
+{
+    DynamicArray<int> array;
+    array.reserve(10);
+
+    array.shrink_to_fit();
+
+    REQUIRE(array.size() == 0);
+    REQUIRE(array.capacity() == 0);
+    REQUIRE(array.empty());
+
+    REQUIRE(array.data() == nullptr);
+}

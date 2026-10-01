@@ -216,6 +216,24 @@ public:
         size_ = new_size;
     }
 
+    void shrink_to_fit()
+    {
+        if (size_ == capacity_)
+        {
+            return;
+        }
+
+        if (size_ == 0)
+        {
+            delete[] data_;
+            data_ = nullptr;
+            capacity_ = 0;
+            return;
+        }
+
+        reallocate(size_);
+    }
+
     // Element access
     T &at(std::size_t index)
     {
@@ -294,7 +312,7 @@ public:
     {
         return data_;
     }
-    
+
     // Modifiers
     void push_back(const T &value)
     {
