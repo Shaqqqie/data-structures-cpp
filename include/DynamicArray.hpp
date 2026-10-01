@@ -285,6 +285,16 @@ public:
         return data_[size_ - 1];
     }
 
+    T *data()
+    {
+        return data_;
+    }
+
+    const T *data() const
+    {
+        return data_;
+    }
+    
     // Modifiers
     void push_back(const T &value)
     {

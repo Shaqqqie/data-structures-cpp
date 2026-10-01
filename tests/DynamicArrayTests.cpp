@@ -422,7 +422,7 @@ TEST_CASE("DynamicArray can shrink in size")
     REQUIRE(array.capacity() == 8);
 
     array.resize(2);
-    
+
     REQUIRE(array.size() == 2);
     REQUIRE(array.capacity() == 8);
     REQUIRE(array[0] == 10);
@@ -447,4 +447,38 @@ TEST_CASE("DynamicArray resize() also works for other types than int")
     REQUIRE(array[1] == "world");
     REQUIRE(array[2] == "");
     REQUIRE(array[3] == "");
+}
+
+TEST_CASE("DynamicArray data() provides mutable access to underlying storage")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    int *ptr = array.data();
+
+    REQUIRE(ptr[0] == 10);
+    REQUIRE(ptr[1] == 20);
+    REQUIRE(ptr[2] == 30);
+
+    ptr[2] = 40;
+
+    REQUIRE(array[2] == 40);
+}
+
+TEST_CASE("DynamicArray data() provides const access to underlying storage")
+{
+    DynamicArray<int> original;
+    original.push_back(10);
+    original.push_back(20);
+    original.push_back(30);
+
+    const DynamicArray<int> array{original};
+
+    const int *ptr = array.data();
+
+    REQUIRE(ptr[0] == 10);
+    REQUIRE(ptr[1] == 20);
+    REQUIRE(ptr[2] == 30);
 }
