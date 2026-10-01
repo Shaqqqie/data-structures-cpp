@@ -532,3 +532,24 @@ TEST_CASE("DynamicArray shrink_to_fit releases storage for empty array")
 
     REQUIRE(array.data() == nullptr);
 }
+
+TEST_CASE("DynamicArray can be constructed from an initializer list")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    REQUIRE(array.size() == 3);
+    REQUIRE(array.capacity() == 3);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+    REQUIRE(array[2] == 30);
+}
+
+TEST_CASE("DynamicArray can be constructed with empty braces")
+{
+    DynamicArray<int> array{};
+
+    REQUIRE(array.size() == 0);
+    REQUIRE(array.capacity() == 0);
+    REQUIRE(array.empty());
+    REQUIRE(array.data() == nullptr);
+}

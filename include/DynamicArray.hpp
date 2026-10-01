@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
 
 template <typename T>
@@ -111,6 +112,18 @@ public:
             {
                 data_[i] = other.data_[i];
             }
+        }
+    }
+
+    DynamicArray(std::initializer_list<T> values)
+    : data_{nullptr}, size_{values.size()}, capacity_{values.size()}
+    {
+        data_ = new T[capacity_];
+        T *it = data_;
+        for(const T &value : values)
+        {
+            *it = value;
+            ++it; 
         }
     }
 
