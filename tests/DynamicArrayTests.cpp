@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 struct MoveTracker
@@ -763,4 +764,25 @@ TEST_CASE("DynamicArray iterator works with std::sort")
     REQUIRE(array[0] == 10);
     REQUIRE(array[1] == 20);
     REQUIRE(array[2] == 30);
+}
+
+TEST_CASE("DynamicArray const iterator supports random access")
+{
+    const DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.begin();
+
+    REQUIRE(it[2] == 30);
+
+    it += 2;
+    REQUIRE(*it == 30);
+
+    it -= 1;
+    REQUIRE(*it == 20);
+
+    REQUIRE(array.end() - array.begin() == 3);
+
+    static_assert(std::is_same_v<decltype(*it), const int&>);
+    static_assert(std::random_access_iterator<DynamicArray<int>::Iterator>);
+    static_assert(std::random_access_iterator<DynamicArray<int>::ConstIterator>);
 }

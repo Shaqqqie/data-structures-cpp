@@ -13,7 +13,7 @@ public:
     class Iterator
     {
     private:
-        T *p;
+        T *p{nullptr};
 
     public:
         using value_type = T;
@@ -21,6 +21,8 @@ public:
         using pointer = T *;
         using reference = T &;
         using iterator_category = std::random_access_iterator_tag;
+
+        Iterator() = default;
 
         explicit Iterator(T *array)
             : p{array}
@@ -35,6 +37,7 @@ public:
         Iterator &operator++()
         {
             ++p;
+            
             return *this;
         }
 
@@ -50,6 +53,7 @@ public:
         Iterator &operator--()
         {
             --p;
+            
             return *this;
         }
 
@@ -80,12 +84,14 @@ public:
         Iterator &operator+=(std::ptrdiff_t offset)
         {
             p += offset;
+            
             return *this;
         }
 
         Iterator &operator-=(std::ptrdiff_t offset)
         {
             p -= offset;
+            
             return *this;
         }
 
@@ -123,14 +129,27 @@ public:
         {
             return p != other.p;
         }
+
+        friend Iterator operator+(std::ptrdiff_t offset, const Iterator &it)
+        {
+            return Iterator{it.p + offset};
+        }
     };
 
     class ConstIterator
     {
     private:
-        const T *p;
+        const T *p{nullptr};
 
     public:
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const T *;
+        using reference = const T &;
+        using iterator_category = std::random_access_iterator_tag;
+
+        ConstIterator() = default;
+
         explicit ConstIterator(const T *array)
             : p{array}
         {
@@ -141,10 +160,88 @@ public:
             return *p;
         }
 
-        ConstIterator &operator++()
+        ConstIterator &operator++() 
         {
             ++p;
             return *this;
+        }
+
+        ConstIterator operator++(int)
+        {
+            ConstIterator old{*this};
+
+            ++(*this);
+
+            return old;
+        }
+
+        ConstIterator &operator--() 
+        {
+            --p;
+            return *this;
+        }
+
+        ConstIterator operator--(int)
+        {
+            ConstIterator old{*this};
+
+            --(*this);
+
+            return old;
+        }
+
+        ConstIterator operator+(std::ptrdiff_t offset) const
+        {
+            return ConstIterator{p + offset};
+        }
+
+        ConstIterator operator-(std::ptrdiff_t offset) const 
+        {
+            return ConstIterator{p - offset};
+        }
+
+        std::ptrdiff_t operator-(const ConstIterator &other) const
+        {
+            return p - other.p;
+        }
+
+        ConstIterator &operator+=(std::ptrdiff_t offset) 
+        {
+            p += offset;
+            
+            return *this;
+        }
+
+        ConstIterator &operator-=(std::ptrdiff_t offset) 
+        {
+            p -= offset;
+
+            return *this;
+        }
+
+        const T &operator[](std::ptrdiff_t offset) const
+        {
+            return p[offset];
+        }
+
+        bool operator<(const ConstIterator &other) const
+        {
+            return p < other.p;
+        }
+
+        bool operator>(const ConstIterator &other) const
+        {
+            return p > other.p;
+        }
+
+        bool operator<=(const ConstIterator &other) const
+        {
+            return p <= other.p;
+        }
+
+        bool operator>=(const ConstIterator &other) const
+        {
+            return p >= other.p;
         }
 
         bool operator==(const ConstIterator &other) const
@@ -155,6 +252,11 @@ public:
         bool operator!=(const ConstIterator &other) const
         {
             return p != other.p;
+        }
+
+        friend ConstIterator operator+(std::ptrdiff_t offset, const ConstIterator &it)
+        {
+            return ConstIterator{it.p + offset};
         }
     };
 
