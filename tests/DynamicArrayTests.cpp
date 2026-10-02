@@ -2,6 +2,7 @@
 
 #include "DynamicArray.hpp"
 
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -639,4 +640,127 @@ TEST_CASE("DynamicArray moves existing elements during reallocation")
     REQUIRE_FALSE(array[1].was_moved);
     REQUIRE(array[0].was_moved);
     REQUIRE_FALSE(array[0].was_copied);
+}
+
+TEST_CASE("DynamicArray iterator can move backwards")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.end();
+
+    --it;
+    REQUIRE(*it == 30);
+
+    --it;
+    REQUIRE(*it == 20);
+
+    --it;
+    REQUIRE(*it == 10);
+}
+
+TEST_CASE("DynamicArray iterator can move forward multiple places")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.begin();
+    auto other = it + 2;
+
+    REQUIRE(*it == 10);
+    REQUIRE(*other == 30);
+}
+
+TEST_CASE("DynamicArray iterator can move backwards multiple places")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.end() - 1;
+    auto other = it - 2;
+
+    REQUIRE(*it == 30);
+    REQUIRE(*other == 10);
+    REQUIRE(other == array.begin());
+}
+
+TEST_CASE("DynamicArray iterator can calculate distances between iterators")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it1 = array.begin();
+    auto it2 = array.end();
+
+    REQUIRE(it2 - it1 == 3);
+    REQUIRE(it1 - it2 == -3);
+}
+
+TEST_CASE("DynamicArray iterator support compound movement")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.begin();
+
+    it += 3;
+    REQUIRE(it == array.end());
+
+    it -= 2;
+    REQUIRE(it == array.begin() + 1);
+    REQUIRE(*it == array[1]);
+}
+
+TEST_CASE("DynamicArray iterator support indexed access")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.begin();
+
+    REQUIRE(it[0] == 10);
+    REQUIRE(it[1] == 20);
+    REQUIRE(it[2] == 30);
+
+    it[1] = 99;
+
+    REQUIRE(array[1] == 99);
+}
+
+TEST_CASE("DynamicArray iterator supports relational comparisons")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto first = array.begin();
+    auto second = array.begin() + 1;
+    auto same_as_first = array.begin();
+
+    REQUIRE(first < second);
+    REQUIRE(first <= same_as_first);
+    REQUIRE(first >= same_as_first);
+    REQUIRE(second > first);
+    REQUIRE(first <= second);
+    REQUIRE(second >= first);
+}
+
+TEST_CASE("DynamicArray iterator supports postfix increment and decrement")
+{
+    DynamicArray<int> array{10, 20, 30};
+
+    auto it = array.begin();
+
+    auto old = it++;
+
+    REQUIRE(*old == 10);
+    REQUIRE(*it == 20);
+
+    old = it--;
+
+    REQUIRE(*old == 20);
+    REQUIRE(*it == 10);
+}
+
+TEST_CASE("DynamicArray iterator works with std::sort")
+{
+    DynamicArray<int> array{30, 10, 20};
+
+    std::sort(array.begin(), array.end());
+
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+    REQUIRE(array[2] == 30);
 }

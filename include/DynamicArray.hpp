@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <initializer_list>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 
@@ -15,6 +16,12 @@ public:
         T *p;
 
     public:
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = T *;
+        using reference = T &;
+        using iterator_category = std::random_access_iterator_tag;
+
         explicit Iterator(T *array)
             : p{array}
         {
@@ -29,6 +36,82 @@ public:
         {
             ++p;
             return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator old{*this};
+
+            ++(*this);
+
+            return old;
+        }
+
+        Iterator &operator--()
+        {
+            --p;
+            return *this;
+        }
+
+        Iterator operator--(int)
+        {
+            Iterator old{*this};
+
+            --(*this);
+
+            return old;
+        }
+
+        Iterator operator+(std::ptrdiff_t offset) const
+        {
+            return Iterator{p + offset};
+        }
+
+        Iterator operator-(std::ptrdiff_t offset) const
+        {
+            return Iterator{p - offset};
+        }
+
+        std::ptrdiff_t operator-(const Iterator &other) const
+        {
+            return p - other.p;
+        }
+
+        Iterator &operator+=(std::ptrdiff_t offset)
+        {
+            p += offset;
+            return *this;
+        }
+
+        Iterator &operator-=(std::ptrdiff_t offset)
+        {
+            p -= offset;
+            return *this;
+        }
+
+        T &operator[](std::ptrdiff_t offset) const
+        {
+            return p[offset];
+        }
+
+        bool operator<(const Iterator &other) const
+        {
+            return p < other.p;
+        }
+
+        bool operator>(const Iterator &other) const
+        {
+            return p > other.p;
+        }
+
+        bool operator<=(const Iterator &other) const
+        {
+            return p <= other.p;
+        }
+
+        bool operator>=(const Iterator &other) const
+        {
+            return p >= other.p;
         }
 
         bool operator==(const Iterator &other) const
@@ -117,14 +200,14 @@ public:
     }
 
     DynamicArray(std::initializer_list<T> values)
-    : data_{nullptr}, size_{values.size()}, capacity_{values.size()}
+        : data_{nullptr}, size_{values.size()}, capacity_{values.size()}
     {
         data_ = new T[capacity_];
         T *it = data_;
-        for(const T &value : values)
+        for (const T &value : values)
         {
             *it = value;
-            ++it; 
+            ++it;
         }
     }
 
@@ -211,7 +294,7 @@ public:
         {
             return;
         }
-        
+
         reallocate(new_capacity);
     }
 
@@ -222,7 +305,7 @@ public:
             reallocate(new_size);
         }
 
-        for(std::size_t i{size_}; i < new_size; ++i)
+        for (std::size_t i{size_}; i < new_size; ++i)
         {
             data_[i] = T{};
         }
