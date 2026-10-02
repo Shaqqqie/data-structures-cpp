@@ -5,6 +5,27 @@
 #include <string>
 #include <utility>
 
+struct MoveTracker
+{
+    bool was_copied{false};
+    bool was_moved{false};
+
+    MoveTracker &operator=(const MoveTracker&)
+    {
+        was_copied = true;
+        was_moved = false;
+
+        return *this;
+    }
+
+    MoveTracker &operator=(MoveTracker &&) noexcept
+    {
+        was_moved = true;
+        was_copied = false;
+        return *this;
+    }
+};
+
 TEST_CASE("DynamicArray starts empty")
 {
     DynamicArray<int> array;
@@ -552,4 +573,70 @@ TEST_CASE("DynamicArray can be constructed with empty braces")
     REQUIRE(array.capacity() == 0);
     REQUIRE(array.empty());
     REQUIRE(array.data() == nullptr);
+}
+
+TEST_CASE("DynamicArray push_back can move and rvalue")
+{
+    DynamicArray<std::string> array;
+
+    std::string value{"hello"};
+    array.push_back(std::move(value));
+
+    REQUIRE(array[0] == "hello");
+}
+
+TEST_CASE("DynamicArray push_back works with lvalue")
+{
+    DynamicArray<std::string> array;
+
+    std::string value{"hello"};
+
+    array.push_back(value);
+
+    REQUIRE(array[0] == "hello");
+    REQUIRE(value == "hello");
+}
+
+TEST_CASE("DynamicArray push_back uses move assignment for rvalues")
+{
+    DynamicArray<MoveTracker> array;
+
+    MoveTracker tracker;
+
+    array.push_back(std::move(tracker));
+
+    REQUIRE_FALSE(array[0].was_copied);
+    REQUIRE(array[0].was_moved);    
+}
+
+TEST_CASE("DynamicArray push_back uses copy assignment for lvalues ")
+{
+    DynamicArray<MoveTracker> array;
+
+    MoveTracker tracker;
+
+    array.push_back(tracker);
+
+    REQUIRE_FALSE(array[0].was_moved);
+    REQUIRE(array[0].was_copied);
+}
+
+TEST_CASE("DynamicArray moves existing elements during reallocation")
+{
+    DynamicArray<MoveTracker> array;
+
+    MoveTracker first;
+    MoveTracker second;
+
+    array.push_back(first);
+    
+    REQUIRE(array[0].was_copied);
+    REQUIRE_FALSE(array[0].was_moved);
+
+    array.push_back(second);
+    
+    REQUIRE(array[1].was_copied);
+    REQUIRE_FALSE(array[1].was_moved);
+    REQUIRE(array[0].was_moved);
+    REQUIRE_FALSE(array[0].was_copied);
 }

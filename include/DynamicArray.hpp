@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <stdexcept>
+#include <utility>
 
 template <typename T>
 class DynamicArray
@@ -85,7 +86,7 @@ private:
 
         for (std::size_t i{0}; i < size_; ++i)
         {
-            new_array[i] = data_[i];
+            new_array[i] = std::move(data_[i]);
         }
 
         delete[] data_;
@@ -342,6 +343,24 @@ public:
         }
 
         data_[size_] = value;
+        ++size_;
+    }
+
+    void push_back(T &&value)
+    {
+        if (size_ == capacity_)
+        {
+            if (capacity_ == 0)
+            {
+                reallocate(1);
+            }
+            else
+            {
+                reallocate(capacity_ * 2);
+            }
+        }
+
+        data_[size_] = std::move(value);
         ++size_;
     }
 
