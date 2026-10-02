@@ -163,6 +163,7 @@ public:
         ConstIterator &operator++() 
         {
             ++p;
+
             return *this;
         }
 
@@ -178,6 +179,7 @@ public:
         ConstIterator &operator--() 
         {
             --p;
+
             return *this;
         }
 
@@ -305,6 +307,7 @@ public:
         : data_{nullptr}, size_{values.size()}, capacity_{values.size()}
     {
         data_ = new T[capacity_];
+        
         T *it = data_;
         for (const T &value : values)
         {
@@ -425,8 +428,10 @@ public:
         if (size_ == 0)
         {
             delete[] data_;
+            
             data_ = nullptr;
             capacity_ = 0;
+            
             return;
         }
 

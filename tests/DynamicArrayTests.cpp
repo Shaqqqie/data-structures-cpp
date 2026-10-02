@@ -3,6 +3,8 @@
 #include "DynamicArray.hpp"
 
 #include <algorithm>
+#include <iterator>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -28,6 +30,12 @@ struct MoveTracker
     }
 };
 
+static_assert(std::random_access_iterator<DynamicArray<int>::Iterator>);
+static_assert(std::random_access_iterator<DynamicArray<int>::ConstIterator>);
+
+//---------------------------------
+// Construction
+//---------------------------------
 TEST_CASE("DynamicArray starts empty")
 {
     DynamicArray<int> array;
@@ -37,95 +45,30 @@ TEST_CASE("DynamicArray starts empty")
     REQUIRE(array.empty());
 }
 
-TEST_CASE("DynamicArray can push back elements")
+TEST_CASE("DynamicArray can be constructed from an initializer list")
 {
-    DynamicArray<int> array;
-
-    array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
+    DynamicArray<int> array{10, 20, 30};
 
     REQUIRE(array.size() == 3);
-    REQUIRE(array.capacity() == 4);
-
+    REQUIRE(array.capacity() == 3);
     REQUIRE(array[0] == 10);
     REQUIRE(array[1] == 20);
     REQUIRE(array[2] == 30);
 }
 
-TEST_CASE("DynamicArray operator[] allows element modification")
+TEST_CASE("DynamicArray can be constructed with empty braces")
 {
-    DynamicArray<int> array;
-
-    array.push_back(10);
-    array[0] = 42;
-
-    REQUIRE(array[0] == 42);
-}
-
-TEST_CASE("DynamicArray at() accesses elements")
-{
-    DynamicArray<int> array;
-
-    array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
-
-    REQUIRE(array.at(0) == 10);
-    REQUIRE(array.at(1) == 20);
-    REQUIRE(array.at(2) == 30);
-}
-
-TEST_CASE("DynamicArray at() throws for invalid index")
-{
-    DynamicArray<int> array;
-
-    array.push_back(10);
-
-    REQUIRE_THROWS_AS(array.at(1), std::out_of_range);
-    REQUIRE_THROWS_AS(array.at(100), std::out_of_range);
-}
-
-TEST_CASE("DynamicArray can pop back elements")
-{
-    DynamicArray<int> array;
-
-    array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
-
-    array.pop_back();
-
-    REQUIRE(array.size() == 2);
-    REQUIRE(array.capacity() == 4);
-    REQUIRE(array[0] == 10);
-    REQUIRE(array[1] == 20);
-
-    array.pop_back();
-    REQUIRE(array.size() == 1);
-
-    array.pop_back();
-    REQUIRE(array.empty());
-
-    // Should be safe on empty array
-    array.pop_back();
-    REQUIRE(array.empty());
-}
-
-TEST_CASE("DynamicArray can be cleared")
-{
-    DynamicArray<int> array;
-
-    array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
-
-    array.clear();
+    DynamicArray<int> array{};
 
     REQUIRE(array.size() == 0);
+    REQUIRE(array.capacity() == 0);
     REQUIRE(array.empty());
-    REQUIRE(array.capacity() == 4);
+    REQUIRE(array.data() == nullptr);
 }
+
+//---------------------------------
+// Copy and move semantics
+//---------------------------------
 
 TEST_CASE("DynamicArray can be copied")
 {
@@ -238,29 +181,21 @@ TEST_CASE("DynamicArray can be move assigned")
     REQUIRE(original.capacity() == 0);
 }
 
-TEST_CASE("DynamicArray Iterator can traverse elements")
+//---------------------------------
+// Element access
+//---------------------------------
+
+TEST_CASE("DynamicArray operator[] allows element modification")
 {
     DynamicArray<int> array;
 
     array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
+    array[0] = 42;
 
-    auto it = array.begin();
-
-    REQUIRE(*it == 10);
-
-    ++it;
-    REQUIRE(*it == 20);
-
-    ++it;
-    REQUIRE(*it == 30);
-
-    ++it;
-    REQUIRE(it == array.end());
+    REQUIRE(array[0] == 42);
 }
 
-TEST_CASE("DynamicArray ConstIterator can traverse elements")
+TEST_CASE("DynamicArray at() accesses elements")
 {
     DynamicArray<int> array;
 
@@ -268,38 +203,19 @@ TEST_CASE("DynamicArray ConstIterator can traverse elements")
     array.push_back(20);
     array.push_back(30);
 
-    const DynamicArray<int> &const_array{array};
-
-    auto it = const_array.begin();
-
-    REQUIRE(*it == 10);
-
-    ++it;
-    REQUIRE(*it == 20);
-
-    ++it;
-    REQUIRE(*it == 30);
-
-    ++it;
-    REQUIRE(it == const_array.end());
+    REQUIRE(array.at(0) == 10);
+    REQUIRE(array.at(1) == 20);
+    REQUIRE(array.at(2) == 30);
 }
 
-TEST_CASE("DynamicArray works with range-based for loop")
+TEST_CASE("DynamicArray at() throws for invalid index")
 {
     DynamicArray<int> array;
 
     array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
 
-    int sum{0};
-
-    for (int value : array)
-    {
-        sum += value;
-    }
-
-    REQUIRE(sum == 60);
+    REQUIRE_THROWS_AS(array.at(1), std::out_of_range);
+    REQUIRE_THROWS_AS(array.at(100), std::out_of_range);
 }
 
 TEST_CASE("DynamicArray front() returns first element and allows modification")
@@ -317,6 +233,13 @@ TEST_CASE("DynamicArray front() returns first element and allows modification")
     REQUIRE(array[0] == 100);
 }
 
+TEST_CASE("DynamicArray front() throws when empty")
+{
+    DynamicArray<int> array;
+
+    REQUIRE_THROWS_AS(array.front(), std::out_of_range);
+}
+
 TEST_CASE("DynamicArray back() returns last element and allows modification")
 {
     DynamicArray<int> array;
@@ -332,19 +255,50 @@ TEST_CASE("DynamicArray back() returns last element and allows modification")
     REQUIRE(array[2] == 200);
 }
 
-TEST_CASE("DynamicArray front() throws when empty")
-{
-    DynamicArray<int> array;
-
-    REQUIRE_THROWS_AS(array.front(), std::out_of_range);
-}
-
 TEST_CASE("DynamicArray back() throws when empty")
 {
     DynamicArray<int> array;
 
     REQUIRE_THROWS_AS(array.back(), std::out_of_range);
 }
+
+TEST_CASE("DynamicArray data() provides mutable access to underlying storage")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    int *ptr = array.data();
+
+    REQUIRE(ptr[0] == 10);
+    REQUIRE(ptr[1] == 20);
+    REQUIRE(ptr[2] == 30);
+
+    ptr[2] = 40;
+
+    REQUIRE(array[2] == 40);
+}
+
+TEST_CASE("DynamicArray data() provides const access to underlying storage")
+{
+    DynamicArray<int> original;
+    original.push_back(10);
+    original.push_back(20);
+    original.push_back(30);
+
+    const DynamicArray<int> array{original};
+
+    const int *ptr = array.data();
+
+    REQUIRE(ptr[0] == 10);
+    REQUIRE(ptr[1] == 20);
+    REQUIRE(ptr[2] == 30);
+}
+
+//---------------------------------
+// Capacity
+//---------------------------------
 
 TEST_CASE("DynamicArray reserve() increases capacity and preserves elements")
 {
@@ -472,40 +426,6 @@ TEST_CASE("DynamicArray resize() also works for other types than int")
     REQUIRE(array[3] == "");
 }
 
-TEST_CASE("DynamicArray data() provides mutable access to underlying storage")
-{
-    DynamicArray<int> array;
-    array.push_back(10);
-    array.push_back(20);
-    array.push_back(30);
-
-    int *ptr = array.data();
-
-    REQUIRE(ptr[0] == 10);
-    REQUIRE(ptr[1] == 20);
-    REQUIRE(ptr[2] == 30);
-
-    ptr[2] = 40;
-
-    REQUIRE(array[2] == 40);
-}
-
-TEST_CASE("DynamicArray data() provides const access to underlying storage")
-{
-    DynamicArray<int> original;
-    original.push_back(10);
-    original.push_back(20);
-    original.push_back(30);
-
-    const DynamicArray<int> array{original};
-
-    const int *ptr = array.data();
-
-    REQUIRE(ptr[0] == 10);
-    REQUIRE(ptr[1] == 20);
-    REQUIRE(ptr[2] == 30);
-}
-
 TEST_CASE("DynamicArray shrink_to_fit shrinks capacity to size")
 {
     DynamicArray<int> array;
@@ -556,28 +476,27 @@ TEST_CASE("DynamicArray shrink_to_fit releases storage for empty array")
     REQUIRE(array.data() == nullptr);
 }
 
-TEST_CASE("DynamicArray can be constructed from an initializer list")
+//---------------------------------
+// Modifiers
+//---------------------------------
+
+TEST_CASE("DynamicArray can push back elements")
 {
-    DynamicArray<int> array{10, 20, 30};
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
 
     REQUIRE(array.size() == 3);
-    REQUIRE(array.capacity() == 3);
+    REQUIRE(array.capacity() == 4);
+
     REQUIRE(array[0] == 10);
     REQUIRE(array[1] == 20);
     REQUIRE(array[2] == 30);
 }
 
-TEST_CASE("DynamicArray can be constructed with empty braces")
-{
-    DynamicArray<int> array{};
-
-    REQUIRE(array.size() == 0);
-    REQUIRE(array.capacity() == 0);
-    REQUIRE(array.empty());
-    REQUIRE(array.data() == nullptr);
-}
-
-TEST_CASE("DynamicArray push_back can move and rvalue")
+TEST_CASE("DynamicArray push_back can move an rvalue")
 {
     DynamicArray<std::string> array;
 
@@ -643,6 +562,115 @@ TEST_CASE("DynamicArray moves existing elements during reallocation")
     REQUIRE_FALSE(array[0].was_copied);
 }
 
+TEST_CASE("DynamicArray can pop back elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    array.pop_back();
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == 4);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+
+    array.pop_back();
+    REQUIRE(array.size() == 1);
+
+    array.pop_back();
+    REQUIRE(array.empty());
+
+    // Should be safe on empty array
+    array.pop_back();
+    REQUIRE(array.empty());
+}
+
+TEST_CASE("DynamicArray can be cleared")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    array.clear();
+
+    REQUIRE(array.size() == 0);
+    REQUIRE(array.empty());
+    REQUIRE(array.capacity() == 4);
+}
+
+//---------------------------------
+// Iterators
+//---------------------------------
+
+TEST_CASE("DynamicArray Iterator can traverse elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    auto it = array.begin();
+
+    REQUIRE(*it == 10);
+
+    ++it;
+    REQUIRE(*it == 20);
+
+    ++it;
+    REQUIRE(*it == 30);
+
+    ++it;
+    REQUIRE(it == array.end());
+}
+
+TEST_CASE("DynamicArray ConstIterator can traverse elements")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    const DynamicArray<int> &const_array{array};
+
+    auto it = const_array.begin();
+
+    REQUIRE(*it == 10);
+
+    ++it;
+    REQUIRE(*it == 20);
+
+    ++it;
+    REQUIRE(*it == 30);
+
+    ++it;
+    REQUIRE(it == const_array.end());
+}
+
+TEST_CASE("DynamicArray works with range-based for loop")
+{
+    DynamicArray<int> array;
+
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    int sum{0};
+
+    for (int value : array)
+    {
+        sum += value;
+    }
+
+    REQUIRE(sum == 60);
+}
+
 TEST_CASE("DynamicArray iterator can move backwards")
 {
     DynamicArray<int> array{10, 20, 30};
@@ -693,7 +721,7 @@ TEST_CASE("DynamicArray iterator can calculate distances between iterators")
     REQUIRE(it1 - it2 == -3);
 }
 
-TEST_CASE("DynamicArray iterator support compound movement")
+TEST_CASE("DynamicArray iterator supports compound movement")
 {
     DynamicArray<int> array{10, 20, 30};
 
@@ -707,7 +735,7 @@ TEST_CASE("DynamicArray iterator support compound movement")
     REQUIRE(*it == array[1]);
 }
 
-TEST_CASE("DynamicArray iterator support indexed access")
+TEST_CASE("DynamicArray iterator supports indexed access")
 {
     DynamicArray<int> array{10, 20, 30};
 
@@ -783,6 +811,4 @@ TEST_CASE("DynamicArray const iterator supports random access")
     REQUIRE(array.end() - array.begin() == 3);
 
     static_assert(std::is_same_v<decltype(*it), const int&>);
-    static_assert(std::random_access_iterator<DynamicArray<int>::Iterator>);
-    static_assert(std::random_access_iterator<DynamicArray<int>::ConstIterator>);
 }
