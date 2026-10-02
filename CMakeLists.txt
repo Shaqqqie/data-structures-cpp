@@ -39,6 +39,7 @@ add_executable(data_structures_tests
     tests/LinkedListTests.cpp
     tests/DynamicArrayTests.cpp
     tests/StackTests.cpp
+    tests/QueueTests.cpp
 )
 
 target_link_libraries(data_structures_tests PRIVATE

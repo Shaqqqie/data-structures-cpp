@@ -207,6 +207,16 @@ public:
         return current->value;
     }
 
+    T &front()
+    {
+        if (!head)
+        {
+            throw std::out_of_range("Empty list.");
+        }
+
+        return head->value;
+    }
+
     const T &front() const
     {
         if (!head)
@@ -217,6 +227,16 @@ public:
         return head->value;
     }
 
+    T &back()
+    {
+        if (!head)
+        {
+            throw std::out_of_range("Empty list.");
+        }
+
+        return tail->value;
+    }
+    
     const T &back() const
     {
         if (!tail)
@@ -260,6 +280,24 @@ public:
     void push_back(const T &value)
     {
         Node *node = new Node{value, nullptr};
+
+        if (empty())
+        {
+            head = node;
+            tail = node;
+        }
+        else
+        {
+            tail->next = node;
+            tail = node;
+        }
+
+        ++size;
+    }
+
+    void push_back(T &&value)
+    {
+        Node *node = new Node{std::move(value), nullptr};
 
         if (empty())
         {
