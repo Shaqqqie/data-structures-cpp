@@ -41,6 +41,7 @@ add_executable(data_structures_tests
     tests/StackTests.cpp
     tests/QueueTests.cpp
     tests/DoublyLinkedListTests.cpp
+    tests/DequeTests.cpp
 )
 
 target_link_libraries(data_structures_tests PRIVATE
