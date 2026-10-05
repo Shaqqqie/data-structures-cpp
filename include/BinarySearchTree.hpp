@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
-#include <vector>
 #include <utility>
 
 template <typename T>

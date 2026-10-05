@@ -64,59 +64,84 @@ TEST_CASE("BinarySearchTree is empty after construction", "[BinarySearchTree]")
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Insert
+// Capacity / State
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TEST_CASE("BinarySearchTree insert() adds a root node", "[BinarySearchTree]")
+TEST_CASE("BinarySearchTree height() returns 0 for empty tree", "[BinarySearchTree]")
 {
     BinarySearchTree<int> tree;
 
-    tree.insert(10);
-
-    REQUIRE_FALSE(tree.empty());
-    REQUIRE(tree.size() == 1);
-    REQUIRE(tree.contains(10));
+    REQUIRE(tree.height() == 0);
 }
 
-TEST_CASE("BinarySearchTree insert() adds values according to BST ordering", "[BinarySearchTree]")
+TEST_CASE("BinarySearchTree height() returns 1 for one node", "[BinarySearchTree]")
 {
     BinarySearchTree<int> tree;
 
     tree.insert(10);
+
+    REQUIRE(tree.height() == 1);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height for left-skewed tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(9);
+    tree.insert(8);
     tree.insert(5);
-    tree.insert(20);
     tree.insert(2);
-    tree.insert(7);
-    tree.insert(15);
-    tree.insert(30);
 
-    REQUIRE(tree.size() == 7);
-
-    REQUIRE(tree.contains(10));
-    REQUIRE(tree.contains(5));
-    REQUIRE(tree.contains(20));
-    REQUIRE(tree.contains(2));
-    REQUIRE(tree.contains(7));
-    REQUIRE(tree.contains(15));
-    REQUIRE(tree.contains(30));
+    REQUIRE(tree.height() == 5);
 }
 
-TEST_CASE("BinarySearchTree insert() ignores duplicate values", "[BinarySearchTree]")
+TEST_CASE("BinarySearchTree height() returns correct height for right-skewed tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(20);
+    tree.insert(30);
+    tree.insert(40);
+
+    REQUIRE(tree.height() == 4);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height when longest path is somewhere on the right", "[BinarySearchTree]")
 {
     BinarySearchTree<int> tree;
 
     tree.insert(10);
     tree.insert(5);
+    tree.insert(8);
+    tree.insert(20);
+    tree.insert(25);
+    tree.insert(15);
+    tree.insert(45);
+
+    REQUIRE(tree.height() == 4);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height after erase()", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
     tree.insert(10);
     tree.insert(5);
+    tree.insert(8);
+    tree.insert(20);
+    tree.insert(25);
+    tree.insert(15);
+    tree.insert(45);
 
-    REQUIRE(tree.size() == 2);
+    tree.erase(25);
 
-    REQUIRE(tree.inorder() == DynamicArray<int>{5, 10});
+    REQUIRE(tree.height() == 3);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Contains
+// Element Access
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TEST_CASE("BinarySearchTree contains() returns false for an empty tree", "[BinarySearchTree]")
@@ -154,10 +179,6 @@ TEST_CASE("BinarySearchTree contains() returns false for missing values", "[Bina
     REQUIRE_FALSE(tree.contains(7));
     REQUIRE_FALSE(tree.contains(30));
 }
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Min / Max
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TEST_CASE("BinarySearchTree min() returns the smallest value", "[BinarySearchTree]")
 {
@@ -209,6 +230,252 @@ TEST_CASE("BinarySearchTree max() throws when tree is empty", "[BinarySearchTree
     BinarySearchTree<int> tree;
 
     REQUIRE_THROWS_AS(tree.max(), std::out_of_range);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Modifiers
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("BinarySearchTree insert() adds a root node", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+
+    REQUIRE_FALSE(tree.empty());
+    REQUIRE(tree.size() == 1);
+    REQUIRE(tree.contains(10));
+}
+
+TEST_CASE("BinarySearchTree insert() adds values according to BST ordering", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(2);
+    tree.insert(7);
+    tree.insert(15);
+    tree.insert(30);
+
+    REQUIRE(tree.size() == 7);
+
+    REQUIRE(tree.contains(10));
+    REQUIRE(tree.contains(5));
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(2));
+    REQUIRE(tree.contains(7));
+    REQUIRE(tree.contains(15));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("BinarySearchTree insert() ignores duplicate values", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(10);
+    tree.insert(5);
+
+    REQUIRE(tree.size() == 2);
+
+    REQUIRE(tree.inorder() == DynamicArray<int>{5, 10});
+}
+
+TEST_CASE("BinarySearchTree clear() removes all values", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(2);
+    tree.insert(7);
+
+    tree.clear();
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.inorder().empty());
+}
+
+TEST_CASE("BinarySearchTree clear() works on an empty tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.clear();
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+}
+
+TEST_CASE("BinarySearchTree can be reused after clear()", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+
+    tree.clear();
+
+    tree.insert(100);
+    tree.insert(50);
+    tree.insert(150);
+
+    REQUIRE(tree.size() == 3);
+    REQUIRE(tree.min() == 50);
+    REQUIRE(tree.max() == 150);
+    REQUIRE(tree.inorder() == DynamicArray<int>{50, 100, 150});
+}
+
+TEST_CASE("BinarySearchTree erase() doesn't change tree when value not in tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+
+    REQUIRE_FALSE(tree.erase(99));
+    REQUIRE(tree.size() == 3);
+}
+
+TEST_CASE("BinarySearchTree erase() removes a leaf", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+
+    tree.erase(5);
+
+    const DynamicArray<int> expected{10, 20};
+
+    REQUIRE(tree.size() == 2);
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() removes the only node", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+
+    tree.erase(10);
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+}
+
+TEST_CASE("BinarySearchTree erase() removes node with only right child", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(7);
+
+    tree.erase(5);
+
+    const DynamicArray<int> expected{7, 10};
+
+    REQUIRE(tree.size() == 2);
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() removes node with only left child", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(20);
+    tree.insert(15);
+
+    tree.erase(20);
+
+    const DynamicArray<int> expected{10, 15};
+
+    REQUIRE(tree.size() == 2);
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() removes root with one child", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(20);
+
+    tree.erase(10);
+
+    const DynamicArray<int> expected{20};
+
+    REQUIRE(tree.size() == 1);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() removes node with two children when successor is direct right child", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(30);
+
+    tree.erase(10);
+
+    const DynamicArray<int> expected{5, 20, 30};
+
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.size() == 3);
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() removes node with two children when successor is deeper", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(15);
+    tree.insert(30);
+    tree.insert(12);
+
+    tree.erase(10);
+
+    const DynamicArray<int> expected{5, 12, 15, 20, 30};
+
+    REQUIRE(tree.size() == 5);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.inorder() == expected);
+}
+
+TEST_CASE("BinarySearchTree erase() reconnects successor's right child", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(15);
+    tree.insert(12);
+    tree.insert(13);
+
+    tree.erase(10);
+
+    const DynamicArray<int> expected{5, 12, 13, 15, 20};
+
+    REQUIRE(tree.size() == 5);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.inorder() == expected);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,7 +533,7 @@ TEST_CASE("BinarySearchTree postorder() traverses left right node", "[BinarySear
     REQUIRE(tree.postorder() == expected);
 }
 
-TEST_CASE("BinarySearchTree traversals return empty vectors for an empty tree", "[BinarySearchTree]")
+TEST_CASE("BinarySearchTree DFS traversals return empty arrays for an empty tree", "[BinarySearchTree]")
 {
     BinarySearchTree<int> tree;
 
@@ -330,58 +597,6 @@ TEST_CASE("BinarySearchTree level_order() returns correct order for an unbalance
     const DynamicArray<int> result{tree.level_order()};
 
     REQUIRE(result == DynamicArray<int> {10, 7, 12, 5, 2});
-}
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Clear
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-TEST_CASE("BinarySearchTree clear() removes all values", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-    tree.insert(2);
-    tree.insert(7);
-
-    tree.clear();
-
-    REQUIRE(tree.empty());
-    REQUIRE(tree.size() == 0);
-    REQUIRE_FALSE(tree.contains(10));
-    REQUIRE(tree.inorder().empty());
-}
-
-TEST_CASE("BinarySearchTree clear() works on an empty tree", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.clear();
-
-    REQUIRE(tree.empty());
-    REQUIRE(tree.size() == 0);
-}
-
-TEST_CASE("BinarySearchTree can be reused after clear()", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-
-    tree.clear();
-
-    tree.insert(100);
-    tree.insert(50);
-    tree.insert(150);
-
-    REQUIRE(tree.size() == 3);
-    REQUIRE(tree.min() == 50);
-    REQUIRE(tree.max() == 150);
-    REQUIRE(tree.inorder() == DynamicArray<int>{50, 100, 150});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -626,229 +841,7 @@ TEST_CASE("BinarySearchTree copy constructor cleans up if element copying throws
     REQUIRE(tree.size() == 5);
 }
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Erase
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TEST_CASE("BinarySearchTree erase() doesn't change tree when value not in tree", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
 
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
 
-    REQUIRE_FALSE(tree.erase(99));
-    REQUIRE(tree.size() == 3);
-}
 
-TEST_CASE("BST erase() removes a leaf", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-
-    tree.erase(5);
-
-    const DynamicArray<int> expected{10, 20};
-
-    REQUIRE(tree.size() == 2);
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() removes the only node", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-
-    tree.erase(10);
-
-    REQUIRE(tree.empty());
-    REQUIRE(tree.size() == 0);
-}
-
-TEST_CASE("BST erase() removes node with only right child", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(7);
-
-    tree.erase(5);
-
-    const DynamicArray<int> expected{7, 10};
-
-    REQUIRE(tree.size() == 2);
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() removes node with only left child", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(20);
-    tree.insert(15);
-
-    tree.erase(20);
-
-    const DynamicArray<int> expected{10, 15};
-
-    REQUIRE(tree.size() == 2);
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() removes root with one child", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(20);
-
-    tree.erase(10);
-
-    const DynamicArray<int> expected{20};
-
-    REQUIRE(tree.size() == 1);
-    REQUIRE_FALSE(tree.contains(10));
-    REQUIRE(tree.contains(20));
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() removes node with two children when successor is direct right child ", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-    tree.insert(30);
-
-    tree.erase(10);
-
-    const DynamicArray<int> expected{5, 20, 30};
-
-    REQUIRE_FALSE(tree.contains(10));
-    REQUIRE(tree.size() == 3);
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() removes node with two children when successor is deeper", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-    tree.insert(15);
-    tree.insert(30);
-    tree.insert(12);
-
-    tree.erase(10);
-
-    const DynamicArray<int> expected{5, 12, 15, 20, 30};
-
-    REQUIRE(tree.size() == 5);
-    REQUIRE_FALSE(tree.contains(10));
-    REQUIRE(tree.inorder() == expected);
-}
-
-TEST_CASE("BST erase() reconnects successor's right child", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(20);
-    tree.insert(15);
-    tree.insert(12);
-    tree.insert(13);
-
-    tree.erase(10);
-
-    const DynamicArray<int> expected{5, 12, 13, 15, 20};
-
-    REQUIRE(tree.size() == 5);
-    REQUIRE_FALSE(tree.contains(10));
-    REQUIRE(tree.inorder() == expected);
-}
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Height
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-TEST_CASE("BinarySearchTree height() returns 0 for empty tree", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    REQUIRE(tree.height() == 0);
-}
-
-TEST_CASE("BinarySearchTree height() returns 1 for one node", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-
-    REQUIRE(tree.height() == 1);
-}
-
-TEST_CASE("BinarySearchTree height() returns correct height for left-skewed tree", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(9);
-    tree.insert(8);
-    tree.insert(5);
-    tree.insert(2);
-
-    REQUIRE(tree.height() == 5);
-}
-
-TEST_CASE("BinarySearchTree height() returns correct height for right-skewed tree", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(20);
-    tree.insert(30);
-    tree.insert(40);
-
-    REQUIRE(tree.height() == 4);
-}
-
-TEST_CASE("BinarySearchTree height() returns correct height when longest path is somewhere on the right", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(8);
-    tree.insert(20);
-    tree.insert(25);
-    tree.insert(15);
-    tree.insert(45);
-
-    REQUIRE(tree.height() == 4);
-}
-
-TEST_CASE("BinarySearchTree height() returns correct height after erase()", "[BinarySearchTree]")
-{
-    BinarySearchTree<int> tree;
-
-    tree.insert(10);
-    tree.insert(5);
-    tree.insert(8);
-    tree.insert(20);
-    tree.insert(25);
-    tree.insert(15);
-    tree.insert(45);
-
-    tree.erase(25);
-
-    REQUIRE(tree.height() == 3);
-}
