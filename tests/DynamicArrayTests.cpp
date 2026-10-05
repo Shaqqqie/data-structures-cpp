@@ -812,3 +812,50 @@ TEST_CASE("DynamicArray const iterator supports random access")
 
     static_assert(std::is_same_v<decltype(*it), const int&>);
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Equality
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("Comparing two DynamicArrays for equality returns true when both are empty")
+{
+    DynamicArray<int> array1{};
+    DynamicArray<int> array2{};
+
+    REQUIRE(array1 == array2);
+}
+
+TEST_CASE("Comparing two DynamicArrays for equality returns true when contents are the same")
+{
+    DynamicArray<int> array1{10,20,30};
+    DynamicArray<int> array2{10,20,30};
+
+    REQUIRE(array1 == array2);
+}
+
+TEST_CASE("Comparing two DynamicArrays for equality returns false when sizes differ")
+{
+    DynamicArray<int> array1{10, 20, 30};
+    DynamicArray<int> array2{10, 20};
+
+    REQUIRE_FALSE(array1 == array2);
+}
+
+TEST_CASE("Comparing two DynamicArrays for equality returns false when size is equal but contents differ")
+{
+    DynamicArray<int> array1{10, 20, 30};
+    DynamicArray<int> array2{40, 50, 60};
+
+    REQUIRE_FALSE(array1 == array2);
+}
+
+TEST_CASE("Comparing two DynamicArrays ignores capacity")
+{
+    DynamicArray<int> array1{10, 20, 30};
+    DynamicArray<int> array2{10, 20, 30};
+
+    array2.reserve(20);
+
+    REQUIRE(array1.capacity() != array2.capacity());
+    REQUIRE(array1 == array2);
+}

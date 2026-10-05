@@ -372,6 +372,24 @@ public:
         return *this;
     }
 
+    bool operator==(const DynamicArray &other) const
+    {
+        if (size_ != other.size_)
+        {
+            return false;
+        }
+
+        for(std::size_t i{0}; i < size_; ++i)
+        {
+            if (data_[i] != other.data_[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     ~DynamicArray()
     {
         delete[] data_;
