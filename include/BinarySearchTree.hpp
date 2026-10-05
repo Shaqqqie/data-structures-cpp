@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
@@ -107,6 +108,19 @@ private:
         return new_node;
     }
 
+    std::size_t height(const Node *node) const
+    {
+        if (node == nullptr)
+        {
+            return 0;
+        }
+
+        std::size_t left_height{height(node->left)};
+        std::size_t right_height{height(node->right)};
+
+        return 1 + std::max(left_height, right_height);
+    }
+
 public:
     // Construction / Ownership
     BinarySearchTree()
@@ -167,6 +181,11 @@ public:
     [[nodiscard]] std::size_t size() const noexcept
     {
         return size_;
+    }
+
+    [[nodiscard]] std::size_t height() const
+    {
+        return height(root_);
     }
 
     // Element Access

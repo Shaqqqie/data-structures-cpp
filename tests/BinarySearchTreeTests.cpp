@@ -562,8 +562,7 @@ TEST_CASE("BinarySearchTree copy constructor cleans up if element copying throws
 
     REQUIRE_THROWS_AS(
         BinarySearchTree<ThrowOnCopy>{tree},
-        std::runtime_error
-    );
+        std::runtime_error);
 
     ThrowOnCopy::copies_until_throw = -1;
 
@@ -599,13 +598,12 @@ TEST_CASE("BST erase() removes a leaf", "[BinarySearchTree]")
 
     REQUIRE(tree.size() == 2);
     REQUIRE(tree.inorder() == expected);
-
 }
 
 TEST_CASE("BST erase() removes the only node", "[BinarySearchTree]")
 {
     BinarySearchTree<int> tree;
-    
+
     tree.insert(10);
 
     tree.erase(10);
@@ -721,3 +719,79 @@ TEST_CASE("BST erase() reconnects successor's right child", "[BinarySearchTree]"
     REQUIRE(tree.inorder() == expected);
 }
 
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Height
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("BinarySearchTree height() returns 0 for empty tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    REQUIRE(tree.height() == 0);
+}
+
+TEST_CASE("BinarySearchTree height() returns 1 for one node", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+
+    REQUIRE(tree.height() == 1);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height for left-skewed tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(9);
+    tree.insert(8);
+    tree.insert(5);
+    tree.insert(2);
+
+    REQUIRE(tree.height() == 5);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height for right-skewed tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(20);
+    tree.insert(30);
+    tree.insert(40);
+
+    REQUIRE(tree.height() == 4);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height when longest path is somewhere on the right", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(8);
+    tree.insert(20);
+    tree.insert(25);
+    tree.insert(15);
+    tree.insert(45);
+
+    REQUIRE(tree.height() == 4);
+}
+
+TEST_CASE("BinarySearchTree height() returns correct height after erase()", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(8);
+    tree.insert(20);
+    tree.insert(25);
+    tree.insert(15);
+    tree.insert(45);
+
+    tree.erase(25);
+
+    REQUIRE(tree.height() == 3);
+}

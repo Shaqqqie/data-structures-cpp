@@ -112,6 +112,7 @@ public:
         other.tail = nullptr;
         other.size = 0;
     }
+    
     LinkedList &operator=(const LinkedList &other)
     {
         if (this == &other)
