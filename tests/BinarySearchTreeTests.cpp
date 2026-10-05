@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "DynamicArray.hpp"
 #include "BinarySearchTree.hpp"
 
 #include <stdexcept>
-#include <vector>
 #include <utility>
 
 namespace
@@ -112,7 +112,7 @@ TEST_CASE("BinarySearchTree insert() ignores duplicate values", "[BinarySearchTr
 
     REQUIRE(tree.size() == 2);
 
-    REQUIRE(tree.inorder() == std::vector<int>{5, 10});
+    REQUIRE(tree.inorder() == DynamicArray<int>{5, 10});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ TEST_CASE("BinarySearchTree inorder() returns values in sorted order", "[BinaryS
     tree.insert(15);
     tree.insert(30);
 
-    const std::vector<int> expected{2, 5, 7, 10, 15, 20, 30};
+    const DynamicArray<int> expected{2, 5, 7, 10, 15, 20, 30};
 
     REQUIRE(tree.inorder() == expected);
 }
@@ -244,7 +244,7 @@ TEST_CASE("BinarySearchTree preorder() traverses node left right", "[BinarySearc
     tree.insert(15);
     tree.insert(30);
 
-    const std::vector<int> expected{10, 5, 2, 7, 20, 15, 30};
+    const DynamicArray<int> expected{10, 5, 2, 7, 20, 15, 30};
 
     REQUIRE(tree.preorder() == expected);
 }
@@ -261,7 +261,7 @@ TEST_CASE("BinarySearchTree postorder() traverses left right node", "[BinarySear
     tree.insert(15);
     tree.insert(30);
 
-    const std::vector<int> expected{2, 7, 5, 15, 30, 20, 10};
+    const DynamicArray<int> expected{2, 7, 5, 15, 30, 20, 10};
 
     REQUIRE(tree.postorder() == expected);
 }
@@ -324,7 +324,7 @@ TEST_CASE("BinarySearchTree can be reused after clear()", "[BinarySearchTree]")
     REQUIRE(tree.size() == 3);
     REQUIRE(tree.min() == 50);
     REQUIRE(tree.max() == 150);
-    REQUIRE(tree.inorder() == std::vector<int>{50, 100, 150});
+    REQUIRE(tree.inorder() == DynamicArray<int>{50, 100, 150});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -437,7 +437,7 @@ TEST_CASE("BinarySearchTree handles copy self-assignment", "[BinarySearchTree]")
     tree = tree;
 
     REQUIRE(tree.size() == 3);
-    REQUIRE(tree.inorder() == std::vector<int>{5, 10, 20});
+    REQUIRE(tree.inorder() == DynamicArray<int>{5, 10, 20});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -455,7 +455,7 @@ TEST_CASE("BinarySearchTree move constructor transfers ownership", "[BinarySearc
     BinarySearchTree<int> destination{std::move(source)};
 
     REQUIRE(destination.size() == 3);
-    REQUIRE(destination.inorder() == std::vector<int>{5, 10, 20});
+    REQUIRE(destination.inorder() == DynamicArray<int>{5, 10, 20});
 
     REQUIRE(source.empty());
     REQUIRE(source.size() == 0);
@@ -500,7 +500,7 @@ TEST_CASE("BinarySearchTree move assignment transfers ownership", "[BinarySearch
     destination = std::move(source);
 
     REQUIRE(destination.size() == 3);
-    REQUIRE(destination.inorder() == std::vector<int>{5, 10, 20});
+    REQUIRE(destination.inorder() == DynamicArray<int>{5, 10, 20});
 
     REQUIRE_FALSE(destination.contains(100));
     REQUIRE_FALSE(destination.contains(50));
@@ -541,7 +541,7 @@ TEST_CASE("BinarySearchTree handles move self-assignment", "[BinarySearchTree]")
     tree = std::move(tree);
 
     REQUIRE(tree.size() == 3);
-    REQUIRE(tree.inorder() == std::vector<int>{5, 10, 20});
+    REQUIRE(tree.inorder() == DynamicArray<int>{5, 10, 20});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -594,7 +594,7 @@ TEST_CASE("BST erase() removes a leaf", "[BinarySearchTree]")
 
     tree.erase(5);
 
-    const std::vector<int> expected{10, 20};
+    const DynamicArray<int> expected{10, 20};
 
     REQUIRE(tree.size() == 2);
     REQUIRE(tree.inorder() == expected);
@@ -622,7 +622,7 @@ TEST_CASE("BST erase() removes node with only right child", "[BinarySearchTree]"
 
     tree.erase(5);
 
-    const std::vector<int> expected{7, 10};
+    const DynamicArray<int> expected{7, 10};
 
     REQUIRE(tree.size() == 2);
     REQUIRE(tree.inorder() == expected);
@@ -638,7 +638,7 @@ TEST_CASE("BST erase() removes node with only left child", "[BinarySearchTree]")
 
     tree.erase(20);
 
-    const std::vector<int> expected{10, 15};
+    const DynamicArray<int> expected{10, 15};
 
     REQUIRE(tree.size() == 2);
     REQUIRE(tree.inorder() == expected);
@@ -653,7 +653,7 @@ TEST_CASE("BST erase() removes root with one child", "[BinarySearchTree]")
 
     tree.erase(10);
 
-    const std::vector<int> expected{20};
+    const DynamicArray<int> expected{20};
 
     REQUIRE(tree.size() == 1);
     REQUIRE_FALSE(tree.contains(10));
@@ -672,7 +672,7 @@ TEST_CASE("BST erase() removes node with two children when successor is direct r
 
     tree.erase(10);
 
-    const std::vector<int> expected{5, 20, 30};
+    const DynamicArray<int> expected{5, 20, 30};
 
     REQUIRE_FALSE(tree.contains(10));
     REQUIRE(tree.size() == 3);
@@ -692,7 +692,7 @@ TEST_CASE("BST erase() removes node with two children when successor is deeper",
 
     tree.erase(10);
 
-    const std::vector<int> expected{5, 12, 15, 20, 30};
+    const DynamicArray<int> expected{5, 12, 15, 20, 30};
 
     REQUIRE(tree.size() == 5);
     REQUIRE_FALSE(tree.contains(10));
@@ -712,7 +712,7 @@ TEST_CASE("BST erase() reconnects successor's right child", "[BinarySearchTree]"
 
     tree.erase(10);
 
-    const std::vector<int> expected{5, 12, 13, 15, 20};
+    const DynamicArray<int> expected{5, 12, 13, 15, 20};
 
     REQUIRE(tree.size() == 5);
     REQUIRE_FALSE(tree.contains(10));

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "DynamicArray.hpp"
+#include "Queue.hpp"
+
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
@@ -29,7 +32,7 @@ private:
     }
 
     // Recursive implementation details
-    void inorder(const Node *node, std::vector<T> &result) const
+    void inorder(const Node *node, DynamicArray<T> &result) const
     {
         if (node == nullptr)
         {
@@ -43,7 +46,7 @@ private:
         inorder(node->right, result);
     }
 
-    void preorder(const Node *node, std::vector<T> &result) const
+    void preorder(const Node *node, DynamicArray<T> &result) const
     {
         if (node == nullptr)
         {
@@ -57,7 +60,7 @@ private:
         preorder(node->right, result);
     }
 
-    void postorder(const Node *node, std::vector<T> &result) const
+    void postorder(const Node *node, DynamicArray<T> &result) const
     {
         if (node == nullptr)
         {
@@ -418,29 +421,52 @@ public:
     }
 
     // Traversal
-    [[nodiscard]] std::vector<T> inorder() const
+    [[nodiscard]] DynamicArray<T> inorder() const
     {
-        std::vector<T> result{};
+        DynamicArray<T> result{};
 
         inorder(root_, result);
 
         return result;
     }
 
-    [[nodiscard]] std::vector<T> preorder() const
+    [[nodiscard]] DynamicArray<T> preorder() const
     {
-        std::vector<T> result{};
+        DynamicArray<T> result{};
 
         preorder(root_, result);
 
         return result;
     }
 
-    [[nodiscard]] std::vector<T> postorder() const
+    [[nodiscard]] DynamicArray<T> postorder() const
     {
-        std::vector<T> result{};
+        DynamicArray<T> result{};
 
         postorder(root_, result);
+
+        return result;
+    }
+
+    [[nodiscard]] DynamicArray<T> level_order() const
+    {
+        DynamicArray<T> result{};
+
+        if (empty())
+        {
+            return result;
+        }
+
+        Queue<const Node*> queue;
+        queue.push(root_);
+
+        while(!queue.empty())
+        {
+            const Node *current{queue.front()};
+            result.push_back(current);
+
+
+        }
 
         return result;
     }
