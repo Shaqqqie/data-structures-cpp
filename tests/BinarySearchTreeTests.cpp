@@ -212,7 +212,7 @@ TEST_CASE("BinarySearchTree max() throws when tree is empty", "[BinarySearchTree
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Traversal
+// DFS Traversals
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TEST_CASE("BinarySearchTree inorder() returns values in sorted order", "[BinarySearchTree]")
@@ -273,6 +273,63 @@ TEST_CASE("BinarySearchTree traversals return empty vectors for an empty tree", 
     REQUIRE(tree.inorder().empty());
     REQUIRE(tree.preorder().empty());
     REQUIRE(tree.postorder().empty());
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// BFS Traversals
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("BinarySearchTree level_order returns empty array when tree is empty", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    const DynamicArray<int> result{tree.level_order()};
+
+    REQUIRE(result.empty());
+    REQUIRE(result.size() == 0);
+}
+
+TEST_CASE("BinarySearchTree level_order() returns one element when only one node in tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+
+    const DynamicArray<int> result{tree.level_order()};
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0] == 10);
+}
+
+TEST_CASE("BinarySearchTree level_order() returns correct order of elements for a balanced tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(5);
+    tree.insert(20);
+    tree.insert(15);
+    tree.insert(7);
+    tree.insert(2);
+
+    const DynamicArray<int> result{tree.level_order()};
+
+    REQUIRE(result == DynamicArray<int> {10, 5, 20, 2, 7, 15});
+}
+
+TEST_CASE("BinarySearchTree level_order() returns correct order for an unbalanced tree", "[BinarySearchTree]")
+{
+    BinarySearchTree<int> tree;
+
+    tree.insert(10);
+    tree.insert(7);
+    tree.insert(5);
+    tree.insert(2);
+    tree.insert(12);
+
+    const DynamicArray<int> result{tree.level_order()};
+
+    REQUIRE(result == DynamicArray<int> {10, 7, 12, 5, 2});
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------

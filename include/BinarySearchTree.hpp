@@ -463,8 +463,18 @@ public:
         while(!queue.empty())
         {
             const Node *current{queue.front()};
-            result.push_back(current);
+            result.push_back(current->value);
+            queue.pop();
 
+            if (current->left != nullptr)
+            {
+                queue.push(current->left);
+            }
+
+            if(current->right != nullptr)
+            {
+                queue.push(current->right);
+            }
 
         }
 
