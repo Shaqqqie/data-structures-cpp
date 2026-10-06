@@ -206,6 +206,86 @@ private:
         return new_node;
     }
 
+    Node *erase(Node *node, const T &value)
+    {
+        if (node == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (value < node->value)
+        {
+            node->left = erase(node->left, value);
+        }
+        else if (value > node->value)
+        {
+            node->right = erase(node->right, value);
+        }
+        else
+        {
+            if (node->left == nullptr && node->right == nullptr)
+            {
+                delete node;
+                --size_;
+                return nullptr;
+            }
+            else if (node->right == nullptr)
+            {
+                Node *child{node->left};
+                delete node;
+                --size_;
+
+                return child;
+            }
+            else if (node->left == nullptr)
+            {
+                Node *child{node->right};
+                delete node;
+                --size_;
+
+                return child;
+            }
+            else
+            {
+                Node *successor{node->right};
+
+                while(successor->left)
+                {
+                    successor = successor->left;
+                }
+
+                node->value = successor->value;
+
+                node->right = erase(node->right, successor->value);
+            }
+        }
+
+        update_height(node);
+
+        int balance(balance_factor(node));
+
+        if (balance > 1 && balance_factor(node->left) >= 0)
+        {
+            return rotate_right(node);
+        }
+        else if (balance > 1 && balance_factor(node->left) < 0)
+        {
+            node->left = rotate_left(node->left);
+            return rotate_right(node);
+        } 
+        else if (balance < -1 && balance_factor(node->right) <= 0)
+        {
+            return rotate_left(node);
+        }
+        else if (balance < -1 && balance_factor(node->right) > 0)
+        {
+            node->right = rotate_right(node->right);
+            return rotate_left(node);
+        }
+
+        return node;
+    }
+
     void swap(AVLTree &other) noexcept
     {
         using std::swap;
@@ -260,7 +340,7 @@ public:
         return *this;
     }
 
-    ~AVLTree()
+    ~AVLTree() noexcept
     {
         clear();
     }
@@ -337,6 +417,11 @@ public:
     void insert(const T &value)
     {
         root_ = insert(root_, value);
+    }
+
+    void erase(const T &value)
+    {
+        root_ = erase(root_, value);
     }
 
     void clear() noexcept

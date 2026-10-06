@@ -478,3 +478,243 @@ TEST_CASE("AVL handles moving one tree to another", "[AVL]")
     REQUIRE(original.empty());
     REQUIRE(original.size() == 0);
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Erase
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL erase() does nothing when tree is empty", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.erase(10);
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+}
+
+TEST_CASE("AVL erase() does nothing when value does not exist", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+
+    tree.erase(999);
+
+    REQUIRE(tree.size() == 3);
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(10));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL erase() removes a leaf node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+
+    tree.erase(10);
+
+    REQUIRE(tree.size() == 2);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL erase() removes node with only left child", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+    tree.insert(5);
+
+    tree.erase(10);
+
+    REQUIRE(tree.size() == 3);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.contains(5));
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL erase() removes node with only right child", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+    tree.insert(15);
+
+    tree.erase(10);
+
+    REQUIRE(tree.size() == 3);
+    REQUIRE_FALSE(tree.contains(10));
+    REQUIRE(tree.contains(15));
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL erase() removes node with two children", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+    tree.insert(25);
+    tree.insert(40);
+
+    tree.erase(30);
+
+    REQUIRE(tree.size() == 4);
+    REQUIRE_FALSE(tree.contains(30));
+
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(10));
+    REQUIRE(tree.contains(25));
+    REQUIRE(tree.contains(40));
+
+    const DynamicArray<int> result{tree.inorder()};
+
+    REQUIRE(result.size() == 4);
+    REQUIRE(result[0] == 10);
+    REQUIRE(result[1] == 20);
+    REQUIRE(result[2] == 25);
+    REQUIRE(result[3] == 40);
+}
+
+TEST_CASE("AVL erase() removes root node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+
+    tree.erase(20);
+
+    REQUIRE(tree.size() == 2);
+    REQUIRE_FALSE(tree.contains(20));
+    REQUIRE(tree.contains(10));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL erase() removes the only node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(10);
+
+    tree.erase(10);
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+    REQUIRE_FALSE(tree.contains(10));
+}
+
+TEST_CASE("AVL erase() can remove all elements", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+    tree.insert(5);
+    tree.insert(15);
+
+    tree.erase(5);
+    tree.erase(15);
+    tree.erase(10);
+    tree.erase(30);
+    tree.erase(20);
+
+    REQUIRE(tree.empty());
+    REQUIRE(tree.size() == 0);
+}
+
+TEST_CASE("AVL erase() performs LL rebalance", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(10);
+    tree.insert(25);
+
+    tree.erase(40);
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.size() == 4);
+    REQUIRE(result[0] == 20);
+    REQUIRE(result[1] == 10);
+    REQUIRE(result[2] == 30);
+    REQUIRE(result[3] == 25);
+}
+
+TEST_CASE("AVL erase() performs RR rebalance", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(35);
+    tree.insert(50);
+
+    tree.erase(20);
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.size() == 4);
+    REQUIRE(result[0] == 40);
+    REQUIRE(result[1] == 30);
+    REQUIRE(result[2] == 35);
+    REQUIRE(result[3] == 50);
+}
+
+TEST_CASE("AVL erase() performs LR rebalance", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(25);
+
+    tree.erase(40);
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.size() == 3);
+    REQUIRE(result[0] == 25);
+    REQUIRE(result[1] == 20);
+    REQUIRE(result[2] == 30);
+}
+
+TEST_CASE("AVL erase() performs RL rebalance", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(35);
+
+    tree.erase(20);
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.size() == 3);
+    REQUIRE(result[0] == 35);
+    REQUIRE(result[1] == 30);
+    REQUIRE(result[2] == 40);
+}
