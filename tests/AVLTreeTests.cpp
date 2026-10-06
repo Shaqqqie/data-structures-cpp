@@ -79,6 +79,56 @@ TEST_CASE("AVL contains() returns false for empty tree", "[AVL]")
     REQUIRE_FALSE(tree.contains(999));
 }
 
+TEST_CASE("AVL min() and max() return correct values", "[AVL]")
+{
+    SECTION("AVL min()/max() handle one node tree correctly")
+    {
+        AVLTree<int> tree;
+
+        tree.insert(10);
+
+        REQUIRE(tree.min() == 10);
+        REQUIRE(tree.max() == 10);
+    }
+
+    SECTION("AVL min()/max() return correct values for multi node tree")
+    {
+        AVLTree<int> tree;
+
+        tree.insert(20);
+        tree.insert(10);
+        tree.insert(30);
+
+        REQUIRE(tree.min() == 10);
+        REQUIRE(tree.max() == 30);
+    }
+
+    SECTION("AVL min()/max() return correct values after rotation")
+    {
+        AVLTree<int> tree;
+        tree.insert(30);
+        tree.insert(20);
+        tree.insert(10);
+
+        REQUIRE(tree.min() == 10);
+        REQUIRE(tree.max() == 30);
+    }
+
+    SECTION("AVL min() throws when tree is empty")
+    {
+        AVLTree<int> tree;
+
+        REQUIRE_THROWS_AS(tree.min(), std::out_of_range);
+    }
+
+    SECTION("AVL max() throws when tree is empty")
+    {
+        AVLTree<int> tree;
+
+        REQUIRE_THROWS_AS(tree.max(), std::out_of_range);
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Rotations
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,6 +218,146 @@ TEST_CASE("AVL rotations preserve subtrees", "[AVL]")
     REQUIRE(tree.contains(20));
     REQUIRE(tree.contains(10));
     REQUIRE(tree.contains(25));
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Inorder Traversal
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL inorder() returns empty array for empty tree", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    const DynamicArray<int> result{tree.inorder()};
+
+    REQUIRE(result.empty());
+    REQUIRE(result.size() == 0);
+}
+
+TEST_CASE("AVL inorder() returns one element for single node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(10);
+
+    const DynamicArray<int> result{tree.inorder()};
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0] == 10);
+}
+
+TEST_CASE("AVL inorder() returns values in sorted order", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(25);
+    tree.insert(40);
+    tree.insert(50);
+
+    const DynamicArray<int> result{tree.inorder()};
+
+    REQUIRE(result.size() == 6);
+    REQUIRE(result[0] == 10);
+    REQUIRE(result[1] == 20);
+    REQUIRE(result[2] == 25);
+    REQUIRE(result[3] == 30);
+    REQUIRE(result[4] == 40);
+    REQUIRE(result[5] == 50);
+}
+
+TEST_CASE("AVL inorder() remains sorted after rotations", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(30);
+    tree.insert(10);
+    tree.insert(20);
+
+    const DynamicArray<int> result{tree.inorder()};
+
+    REQUIRE(result.size() == 3);
+    REQUIRE(result[0] == 10);
+    REQUIRE(result[1] == 20);
+    REQUIRE(result[2] == 30);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Preorder Traversal
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL preorder() returns empty array for empty tree", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.empty());
+    REQUIRE(result.size() == 0);
+}
+
+TEST_CASE("AVL preorder() returns one element for single node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(10);
+
+    const DynamicArray<int> result{tree.preorder()};
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0] == 10);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Postorder Traversal
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL postorder() returns empty array for empty tree", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    const DynamicArray<int> result{tree.postorder()};
+
+    REQUIRE(result.empty());
+    REQUIRE(result.size() == 0);
+}
+
+TEST_CASE("AVL postorder() returns one element for single node", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(10);
+
+    const DynamicArray<int> result{tree.postorder()};
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0] == 10);
+}
+
+TEST_CASE("AVL postorder() returns values in correct order", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+    tree.insert(5);
+    tree.insert(15);
+    tree.insert(25);
+    tree.insert(35);
+
+    const DynamicArray<int> result{tree.postorder()};
+
+    REQUIRE(result.size() == 7);
+    REQUIRE(result[0] == 5);
+    REQUIRE(result[1] == 15);
+    REQUIRE(result[2] == 10);
+    REQUIRE(result[3] == 25);
+    REQUIRE(result[4] == 35);
+    REQUIRE(result[5] == 30);
+    REQUIRE(result[6] == 20);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------

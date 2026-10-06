@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stdexcept>
 #include <utility>
 
 template <typename T>
@@ -141,6 +142,32 @@ private:
         preorder(node->right, result);
     }
 
+    void inorder(const Node *node, DynamicArray<T> &result) const
+    {
+        if (node == nullptr)
+        {
+            return;
+        }
+
+        inorder(node->left, result);
+
+        result.push_back(node->value);
+
+        inorder(node->right, result);
+    }
+
+    void postorder(const Node *node, DynamicArray<T> &result) const
+    {
+        if (node == nullptr)
+        {
+            return;
+        }
+
+        postorder(node->left, result);
+        postorder(node->right, result);
+        result.push_back(node->value);
+    }
+
     void clear(Node *node) noexcept
     {
         if (node == nullptr)
@@ -272,6 +299,40 @@ public:
         return false;
     }
 
+    const T &min() const
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty tree.");
+        }
+
+        const Node *current{root_};
+
+        while(current->left)
+        {
+            current = current->left;
+        }
+
+        return current->value;
+    }
+
+    const T &max() const
+    {
+        if (empty())
+        {
+            throw std::out_of_range("Empty tree.");
+        }
+
+        const Node *current{root_};
+
+        while(current->right)
+        {
+            current = current->right;
+        }
+
+        return current->value;
+    }
+
     // Modifiers
     void insert(const T &value)
     {
@@ -292,6 +353,24 @@ public:
         DynamicArray<T> result{};
 
         preorder(root_, result);
+
+        return result;
+    }
+
+    DynamicArray<T> inorder() const
+    {
+        DynamicArray<T> result{};
+
+        inorder(root_, result);
+
+        return result;
+    }
+
+    DynamicArray<T> postorder() const
+    {
+        DynamicArray<T> result{};
+
+        postorder(root_, result);
 
         return result;
     }
