@@ -43,6 +43,7 @@ add_executable(data_structures_tests
     tests/DoublyLinkedListTests.cpp
     tests/DequeTests.cpp
     tests/BinarySearchTreeTests.cpp
+    tests/AVLTreeTests.cpp
 )
 
 target_link_libraries(data_structures_tests PRIVATE
