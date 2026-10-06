@@ -169,3 +169,122 @@ TEST_CASE("AVL rotations preserve subtrees", "[AVL]")
     REQUIRE(tree.contains(10));
     REQUIRE(tree.contains(25));
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Copy Construction
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVLTree copy constructor creates an identical tree", "[AVL]")
+{
+    AVLTree<int> original{};
+
+    original.insert(20);
+    original.insert(10);
+    original.insert(30);
+
+    AVLTree<int> copy{original};
+
+    copy.insert(25);
+
+    REQUIRE(copy.contains(25));
+    REQUIRE_FALSE(original.contains(25));
+    REQUIRE(original.size() == 3);
+    REQUIRE(copy.size() == 4);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Copy Assignment
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL handles self-assignment", "[AVL]")
+{
+    AVLTree<int> tree;
+
+    tree.insert(20);
+    tree.insert(10);
+    tree.insert(30);
+
+    tree = tree;
+
+    REQUIRE(tree.size() == 3);
+    REQUIRE(tree.contains(20));
+    REQUIRE(tree.contains(10));
+    REQUIRE(tree.contains(30));
+}
+
+TEST_CASE("AVL copy assignment creates an independent deep copy", "[AVL]")
+{
+    AVLTree<int> original;
+
+    original.insert(20);
+    original.insert(10);
+    original.insert(30);
+
+    AVLTree<int> copy;
+    copy.insert(5);
+    copy.insert(2);
+    copy.insert(7);
+
+    copy = original;
+
+    REQUIRE(copy.size() == 3);
+    REQUIRE(copy.contains(20));
+    REQUIRE(copy.contains(10));
+    REQUIRE(copy.contains(30));
+
+    original.insert(15);
+    
+    REQUIRE(original.size() == 4);
+    REQUIRE(original.contains(20));
+    REQUIRE(original.contains(10));
+    REQUIRE(original.contains(15));
+    REQUIRE(original.contains(30));
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Move Construction
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL move constructor moves one tree to another", "[AVL]")
+{
+    AVLTree<int> original;
+    original.insert(20);
+    original.insert(10);
+    original.insert(30);
+
+    AVLTree<int> moved{std::move(original)};
+
+    REQUIRE(moved.size() == 3);
+    REQUIRE(moved.contains(20));
+    REQUIRE(moved.contains(10));
+    REQUIRE(moved.contains(30));
+
+    REQUIRE(original.empty());
+    REQUIRE(original.size() == 0);
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Move Assignment
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("AVL handles moving one tree to another", "[AVL]")
+{
+    AVLTree<int> original;
+    original.insert(20);
+    original.insert(10);
+    original.insert(30);
+
+    AVLTree<int> moved;
+    moved.insert(5);
+    moved.insert(2);
+    moved.insert(7);
+
+    moved = std::move(original);
+
+    REQUIRE(moved.size() == 3);
+    REQUIRE(moved.contains(20));
+    REQUIRE(moved.contains(30));
+
+    REQUIRE(original.empty());
+    REQUIRE(original.size() == 0);
+}

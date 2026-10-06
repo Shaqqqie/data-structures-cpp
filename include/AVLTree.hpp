@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 
 template <typename T>
 class AVLTree
@@ -140,7 +141,7 @@ private:
         preorder(node->right, result);
     }
 
-    void clear(Node *node)
+    void clear(Node *node) noexcept
     {
         if (node == nullptr)
         {
@@ -153,11 +154,83 @@ private:
         delete node;
     }
 
+    Node *clone(const Node *node)
+    {
+        if (node == nullptr)
+        {
+            return nullptr;
+        }
+
+        Node *new_node = new Node{node->value};
+
+        try
+        {
+            new_node->left = clone(node->left);
+            new_node->right = clone(node->right);
+
+            update_height(new_node);
+        }
+        catch (...)
+        {
+            clear(new_node);
+            throw;
+        }
+
+        return new_node;
+    }
+
+    void swap(AVLTree &other) noexcept
+    {
+        using std::swap;
+
+        swap(root_, other.root_);
+        swap(size_, other.size_);
+    }
+
 public:
     // Construction / Ownership
     AVLTree()
         : root_{nullptr}, size_{0}
     {
+    }
+
+    AVLTree(const AVLTree &other)
+        : root_{clone(other.root_)}, size_{other.size_}
+    {
+    }
+
+    AVLTree(AVLTree &&other) noexcept
+    : root_{other.root_}, size_{other.size_}
+    {
+        other.root_ = nullptr;
+        other.size_ = 0;
+    }
+
+    AVLTree &operator=(const AVLTree &other)
+    {
+        AVLTree temp{other};
+
+        swap(temp);
+
+        return *this;
+    }
+
+    AVLTree &operator=(AVLTree &&other) noexcept
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        clear();
+
+        root_ = other.root_;
+        size_ = other.size_;
+
+        other.root_ = nullptr;
+        other.size_ = 0;
+
+        return *this;
     }
 
     ~AVLTree()
@@ -205,7 +278,7 @@ public:
         root_ = insert(root_, value);
     }
 
-    void clear()
+    void clear() noexcept
     {
         clear(root_);
 
