@@ -14,7 +14,7 @@ struct MoveTracker
     bool was_copied{false};
     bool was_moved{false};
 
-    MoveTracker &operator=(const MoveTracker&)
+    MoveTracker &operator=(const MoveTracker &)
     {
         was_copied = true;
         was_moved = false;
@@ -527,7 +527,7 @@ TEST_CASE("DynamicArray push_back uses move assignment for rvalues")
     array.push_back(std::move(tracker));
 
     REQUIRE_FALSE(array[0].was_copied);
-    REQUIRE(array[0].was_moved);    
+    REQUIRE(array[0].was_moved);
 }
 
 TEST_CASE("DynamicArray push_back uses copy assignment for lvalues ")
@@ -550,12 +550,12 @@ TEST_CASE("DynamicArray moves existing elements during reallocation")
     MoveTracker second;
 
     array.push_back(first);
-    
+
     REQUIRE(array[0].was_copied);
     REQUIRE_FALSE(array[0].was_moved);
 
     array.push_back(second);
-    
+
     REQUIRE(array[1].was_copied);
     REQUIRE_FALSE(array[1].was_moved);
     REQUIRE(array[0].was_moved);
@@ -601,6 +601,106 @@ TEST_CASE("DynamicArray can be cleared")
     REQUIRE(array.size() == 0);
     REQUIRE(array.empty());
     REQUIRE(array.capacity() == 4);
+}
+
+TEST_CASE("DynamicArray can erase first element")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    array.erase(0);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array[0] == 20);
+    REQUIRE(array[1] == 30);
+}
+
+TEST_CASE("DynamicArray can erase middle element")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    array.erase(1);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 30);
+}
+
+TEST_CASE("DynamicArray can erase last element")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    array.erase(2);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array[0] == 10);
+    REQUIRE(array[1] == 20);
+}
+
+TEST_CASE("DynamicArray erase() throws for invalid index")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    REQUIRE_THROWS_AS(array.erase(999), std::out_of_range);
+}
+
+TEST_CASE("DynamicArray erase() throws for empty array")
+{
+    DynamicArray<int> array;
+
+    REQUIRE_THROWS_AS(array.erase(0), std::out_of_range);
+}
+
+TEST_CASE("DynamicArray erase() removes the only element")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+
+    array.erase(0);
+
+    REQUIRE(array.empty());
+    REQUIRE(array.size() == 0);
+}
+
+TEST_CASE("DynamicArray erase() does not change capacity")
+{
+    DynamicArray<int> array;
+    array.push_back(10);
+    array.push_back(20);
+    array.push_back(30);
+
+    const std::size_t capacity_before{array.capacity()};
+
+    array.erase(1);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(array.capacity() == capacity_before);
+}
+
+TEST_CASE("DynamicArray erase() suppors move-only types")
+{
+    DynamicArray<std::unique_ptr<int>> array;
+
+    array.push_back(std::make_unique<int>(10));
+    array.push_back(std::make_unique<int>(20));
+    array.push_back(std::make_unique<int>(30));
+
+    array.erase(1);
+
+    REQUIRE(array.size() == 2);
+    REQUIRE(*array[0] == 10);
+    REQUIRE(*array[1] == 30);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -810,7 +910,7 @@ TEST_CASE("DynamicArray const iterator supports random access")
 
     REQUIRE(array.end() - array.begin() == 3);
 
-    static_assert(std::is_same_v<decltype(*it), const int&>);
+    static_assert(std::is_same_v<decltype(*it), const int &>);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -827,8 +927,8 @@ TEST_CASE("Comparing two DynamicArrays for equality returns true when both are e
 
 TEST_CASE("Comparing two DynamicArrays for equality returns true when contents are the same")
 {
-    DynamicArray<int> array1{10,20,30};
-    DynamicArray<int> array2{10,20,30};
+    DynamicArray<int> array1{10, 20, 30};
+    DynamicArray<int> array2{10, 20, 30};
 
     REQUIRE(array1 == array2);
 }

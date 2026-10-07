@@ -585,6 +585,21 @@ public:
         size_ = 0;
     }
 
+    void erase(std::size_t index)
+    {
+        if (index >= size_)
+        {
+            throw std::out_of_range("Invalid index.");
+        }
+
+        for (std::size_t i{index}; i + 1 < size_; ++i)
+        {
+            data_[i] = std::move(data_[i + 1]);
+        }
+
+        --size_;
+    }
+
     // Iterators
     Iterator begin()
     {
