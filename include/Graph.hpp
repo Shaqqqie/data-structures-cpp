@@ -2,9 +2,11 @@
 
 #include "DynamicArray.hpp"
 #include "LinkedList.hpp"
+#include "Queue.hpp"
 
 #include <cstddef>
 #include <stdexcept>
+#include <unordered_set>
 
 template <typename T>
 class Graph
@@ -186,5 +188,41 @@ public:
                 }
             }
         }
+    }
+
+    // Traversal
+    DynamicArray<T> bfs(const T &start) const
+    {
+        if(!contains(start))
+        {
+            throw std::out_of_range("Vertex does not exist.");
+        }
+
+        Queue<T> queue;
+        std::unordered_set<T> visited;
+        DynamicArray<T> result{};
+
+        queue.push(start);
+        visited.insert(start);
+
+        while(!queue.empty())
+        {
+            auto vertex = queue.front();
+
+            result.push_back(vertex);
+
+            queue.pop();
+
+            for (const auto &neighbor : neighbors(vertex))
+            {
+                if (!visited.contains(neighbor))
+                {
+                    queue.push(neighbor);
+                    visited.insert(neighbor);
+                }
+            }
+        }
+
+        return result;
     }
 };

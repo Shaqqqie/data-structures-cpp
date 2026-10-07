@@ -332,3 +332,81 @@ TEST_CASE("Graph remove_vertex() operations", "[Graph]")
         REQUIRE(graph.has_edge(40, 30));
     }
 }
+
+//--------------------------------------------------------------------------------------------------------------------------------------------//
+//  Traversals
+//-------------------------------------------------------------------------------------------------------------------------------------------//
+
+TEST_CASE("Graph bfs() operations", "[Graph]")
+{
+    SECTION("bfs() traverses and returns for one vertex")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+
+        const DynamicArray<int> expected{10};
+
+        REQUIRE(graph.bfs(10) == expected);
+    }
+
+    SECTION("bfs() traverses a simple connected graph in expected order")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(20, 40);
+
+        const DynamicArray<int> expected{10, 20, 30, 40};
+
+        REQUIRE(graph.bfs(10) == expected);
+    }
+
+    SECTION("bfs() handles a cycle without revisiting vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 40);
+        graph.add_edge(40, 10);
+
+        const DynamicArray<int> expected{10, 20, 40, 30};
+
+        REQUIRE(graph.bfs(10) == expected);
+    }
+
+    SECTION("bfs() only traverses the connected component containing start")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(30, 40);
+
+        const DynamicArray<int> expected{10, 20};
+
+        REQUIRE(graph.bfs(10) == expected);
+    }
+
+    SECTION("bfs() throws when start doesn't exist")
+    {
+        Graph<int> graph;
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        REQUIRE_THROWS_AS(graph.bfs(10), std::out_of_range);
+    }
+}
