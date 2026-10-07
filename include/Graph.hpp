@@ -3,6 +3,7 @@
 #include "DynamicArray.hpp"
 #include "LinkedList.hpp"
 #include "Queue.hpp"
+#include "Stack.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -218,6 +219,41 @@ public:
                 if (!visited.contains(neighbor))
                 {
                     queue.push(neighbor);
+                    visited.insert(neighbor);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    DynamicArray<T> dfs(const T &start) const
+    {
+        if (!contains(start))
+        {
+            throw std::out_of_range("Vertex does not exist.");
+        }
+
+        Stack<T> stack;
+        std::unordered_set<T> visited;
+        DynamicArray<T> result{};
+
+        stack.push(start);
+        visited.insert(start);
+
+        while(!stack.empty())
+        {
+            auto vertex = stack.top();
+
+            result.push_back(vertex);
+
+            stack.pop();
+
+            for (const auto &neighbor : neighbors(vertex))
+            {
+                if (!visited.contains(neighbor))
+                {
+                    stack.push(neighbor);
                     visited.insert(neighbor);
                 }
             }
