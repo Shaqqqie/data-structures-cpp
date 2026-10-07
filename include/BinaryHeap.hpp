@@ -66,6 +66,15 @@ public:
     // Construction / Ownership
     BinaryHeap() = default;
 
+    BinaryHeap(const DynamicArray<T> &values)
+    : data_{values}
+    {
+        for(std::size_t i{data_.size() / 2}; i > 0; --i)
+        {
+            sift_down(i - 1);
+        }
+    }
+
     // Capacity / State
     [[nodiscard]] bool empty() const noexcept
     {
@@ -78,16 +87,6 @@ public:
     }
 
     // Element Access
-    T &top()
-    {
-        if (empty())
-        {
-            throw std::out_of_range("Empty heap.");
-        }
-
-        return data_[0];
-    }
-
     const T &top() const
     {
         if (empty())
