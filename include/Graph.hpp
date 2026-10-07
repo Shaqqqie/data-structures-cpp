@@ -36,6 +36,18 @@ public:
         return vertices_.size();
     }
 
+    [[nodiscard]] std::size_t edge_count() const noexcept
+    {
+        std::size_t count{};
+
+        for (const auto &vertex : vertices_)
+        {
+            count += vertex.neighbors.getSize();
+        }
+
+        return count / 2;
+    }
+
     // Element Access
     [[nodiscard]] bool contains(const T &value) const
     {
@@ -189,6 +201,12 @@ public:
                 }
             }
         }
+    }
+
+    void clear() noexcept
+    {
+        vertices_.clear();
+        
     }
 
     // Traversal

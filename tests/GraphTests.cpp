@@ -80,6 +80,110 @@ TEST_CASE("Graph neighbors() operations", "[Graph]")
 //  Edges
 //-------------------------------------------------------------------------------------------------------------------------------------------//
 
+TEST_CASE("Graph edge_count() operations", "[Graph]")
+{
+    SECTION("edge_count() returns 0 for an empty graph")
+    {
+        Graph<int> graph;
+
+        REQUIRE(graph.empty());
+        REQUIRE(graph.edge_count() == 0);
+    }
+
+    SECTION("edge_count() returns zero when there are vertices but no edges")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        REQUIRE(graph.vertex_count() == 2);
+        REQUIRE(graph.edge_count() == 0);
+    }
+
+    SECTION("edge_count() equals 1 when there is one existing edge")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        REQUIRE(graph.edge_count() == 0);
+
+        graph.add_edge(10, 20);
+
+        REQUIRE(graph.edge_count() == 1);
+    }
+
+    SECTION("edge_count() returns correct amount when there are multiple edges")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.edge_count() == 3);
+    }
+
+    SECTION("edge_count() stays the same when adding duplicate edge")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.edge_count() == 2);
+
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.edge_count() == 2);
+    }
+
+    SECTION("edge_count() decreases when removing edge")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.edge_count() == 2);
+
+        graph.remove_edge(30, 40);
+
+        REQUIRE(graph.edge_count() == 1);
+    }
+
+    SECTION("edge_count() decreases when removing a vertex")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 40);
+        graph.add_edge(40, 10);
+
+        REQUIRE(graph.edge_count() == 4);
+
+        graph.remove_vertex(10);
+
+        REQUIRE(graph.edge_count() == 2);
+    }
+}
 TEST_CASE("Graph add / has edge operations", "[Graph]")
 {
     SECTION("add_edge() connects two existing vertices")
@@ -333,6 +437,57 @@ TEST_CASE("Graph remove_vertex() operations", "[Graph]")
     }
 }
 
+TEST_CASE("Graph clear() operations", "[Graph]")
+{
+    SECTION("clear() leaves graph empty")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.vertex_count() == 4);
+        REQUIRE(graph.edge_count() == 2);
+
+        graph.clear();
+
+        REQUIRE(graph.empty());
+        REQUIRE(graph.vertex_count() == 0);
+        REQUIRE(graph.edge_count() == 0);
+    }
+
+    SECTION("clear() double call does nothing")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(30, 40);
+
+        REQUIRE(graph.vertex_count() == 4);
+        REQUIRE(graph.edge_count() == 2);
+
+        graph.clear();
+
+        REQUIRE(graph.empty());
+        REQUIRE(graph.vertex_count() == 0);
+        REQUIRE(graph.edge_count() == 0);
+
+        graph.clear();
+
+        REQUIRE(graph.empty());
+        REQUIRE(graph.vertex_count() == 0);
+        REQUIRE(graph.edge_count() == 0);
+    }
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------------//
 //  Traversals
 //-------------------------------------------------------------------------------------------------------------------------------------------//
@@ -484,4 +639,96 @@ TEST_CASE("Graph dfs() operations", "[Graph]")
 
         REQUIRE_THROWS_AS(graph.dfs(10), std::out_of_range);
     }
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------//
+//  Copy Construction
+//-------------------------------------------------------------------------------------------------------------------------------------------//
+
+TEST_CASE("Graphs handles copy construction", "[Graph]")
+{
+    Graph<int> original;
+
+    original.add_vertex(10);
+    original.add_vertex(20);
+    original.add_vertex(30);
+
+    original.add_edge(10, 20);
+    original.add_edge(20, 30);
+
+    Graph<int> copy{original};
+
+    REQUIRE(copy.vertex_count() == 3);
+    REQUIRE(copy.edge_count() == 2);
+
+    copy.remove_vertex(20);
+
+    REQUIRE(copy.vertex_count() == 2);
+    REQUIRE(copy.edge_count() == 0);
+
+    REQUIRE(original.vertex_count() == 3);
+    REQUIRE(original.edge_count() == 2);
+}
+
+TEST_CASE("Graphs handles copy assignment", "[Graph]")
+{
+    Graph<int> original;
+
+    original.add_vertex(10);
+    original.add_vertex(20);
+    original.add_vertex(30);
+
+    original.add_edge(10, 20);
+    original.add_edge(20, 30);
+
+    Graph<int> copy;
+    copy = original;
+
+    REQUIRE(copy.vertex_count() == 3);
+    REQUIRE(copy.edge_count() == 2);
+
+    copy.remove_vertex(20);
+
+    REQUIRE(copy.vertex_count() == 2);
+    REQUIRE(copy.edge_count() == 0);
+
+    REQUIRE(original.vertex_count() == 3);
+    REQUIRE(original.edge_count() == 2);
+}
+
+TEST_CASE("Graphs handles self-assignment", "[Graph]")
+{
+    Graph<int> original;
+
+    original.add_vertex(10);
+    original.add_vertex(20);
+    original.add_vertex(30);
+
+    original.add_edge(10, 20);
+    original.add_edge(20, 30);
+
+    original = original;
+
+    REQUIRE(original.vertex_count() == 3);
+    REQUIRE(original.edge_count() == 2);
+}
+
+TEST_CASE("Graphs handles move construction", "[Graph]")
+{
+    Graph<int> original;
+
+    original.add_vertex(10);
+    original.add_vertex(20);
+    original.add_vertex(30);
+
+    original.add_edge(10, 20);
+    original.add_edge(20, 30);
+
+    Graph<int> copy{std::move(original)};
+
+    REQUIRE(copy.vertex_count() == 3);
+    REQUIRE(copy.edge_count() == 2);
+
+    REQUIRE(original.vertex_count() == 0);
+    REQUIRE(original.edge_count() == 0);
 }
