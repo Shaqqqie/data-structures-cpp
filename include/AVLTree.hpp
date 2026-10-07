@@ -249,7 +249,7 @@ private:
             {
                 Node *successor{node->right};
 
-                while(successor->left)
+                while (successor->left)
                 {
                     successor = successor->left;
                 }
@@ -272,7 +272,7 @@ private:
         {
             node->left = rotate_left(node->left);
             return rotate_right(node);
-        } 
+        }
         else if (balance < -1 && balance_factor(node->right) <= 0)
         {
             return rotate_left(node);
@@ -307,7 +307,7 @@ public:
     }
 
     AVLTree(AVLTree &&other) noexcept
-    : root_{other.root_}, size_{other.size_}
+        : root_{other.root_}, size_{other.size_}
     {
         other.root_ = nullptr;
         other.size_ = 0;
@@ -388,7 +388,7 @@ public:
 
         const Node *current{root_};
 
-        while(current->left)
+        while (current->left)
         {
             current = current->left;
         }
@@ -405,7 +405,7 @@ public:
 
         const Node *current{root_};
 
-        while(current->right)
+        while (current->right)
         {
             current = current->right;
         }
