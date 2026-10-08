@@ -197,6 +197,120 @@ TEST_CASE("HashTable at() operations", "[HashTable]")
     }
 }
 
+TEST_CASE("HashTable erase() operations", "[HashTable]")
+{
+    SECTION("Erasing from an empty HashTable returns false")
+    {
+        HashTable<int, int> table;
+
+        REQUIRE_FALSE(table.erase(10));
+    }
+
+    SECTION("Erasing an existing key returns true and decreases size_")
+    {
+        HashTable<int, int> table;
+
+        table.insert(42, 15);
+        table.insert(27, 25);
+        table.insert(15, 123);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE(table.erase(27));
+        REQUIRE(table.size() == 2);
+        REQUIRE_FALSE(table.contains(27));
+    }
+
+    SECTION("Erasing a nonexistent key returns false and leaves size_ unchanged")
+    {
+        HashTable<int, int> table;
+
+        table.insert(42, 15);
+        table.insert(27, 25);
+        table.insert(15, 123);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE_FALSE(table.erase(10));
+        REQUIRE(table.size() == 3);
+        REQUIRE_FALSE(table.contains(10));
+    }
+
+    SECTION("Erasing the first entry in a collision chain works")
+    {
+        HashTable<int, int> table{1};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE(table.erase(10));
+        REQUIRE(table.size() == 2);
+        REQUIRE_FALSE(table.contains(10));
+    }
+
+    SECTION("Erasing a middle entry in a collision chain works")
+    {
+        HashTable<int, int> table{1};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE(table.erase(20));
+        REQUIRE(table.size() == 2);
+        REQUIRE_FALSE(table.contains(20));
+    }
+
+    SECTION("Erasing the last entry in a collision chain works")
+    {
+        HashTable<int, int> table{1};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE(table.erase(30));
+        REQUIRE(table.size() == 2);
+        REQUIRE_FALSE(table.contains(30));
+    }
+
+    SECTION("Erasing the only entry leaves the HashTable empty")
+    {
+        HashTable<int, int> table;
+
+        table.insert(42, 15);
+        REQUIRE_FALSE(table.empty());
+        REQUIRE(table.size() == 1);
+
+        REQUIRE(table.erase(42));
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+        REQUIRE_FALSE(table.contains(42));
+    }
+
+    SECTION("Erasing a string key works")
+    {
+        HashTable<std::string, int> table;
+
+        table.insert("Alice", 30);
+        table.insert("Bob", 25);
+        table.insert("Charlie", 5);
+
+        REQUIRE(table.size() == 3);
+
+        REQUIRE(table.erase("Bob"));
+        REQUIRE(table.size() == 2);
+        REQUIRE_FALSE(table.contains("Bob"));
+    }
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // Modifiers
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -258,5 +372,96 @@ TEST_CASE("HashTable insert() operations", "[HashTable]")
 
         REQUIRE_FALSE(table.insert("Alice", 40));
         REQUIRE(table.size() == 3);
+    }
+}
+
+TEST_CASE("HashTable clear() operations", "[HashTable]")
+{
+    SECTION("clear() on an empty HashTable leaves it empty")
+    {
+        HashTable<int, int> table;
+
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+
+        table.clear();
+
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+    }
+
+    SECTION("clear() removes all inserted entries")
+    {
+        HashTable<int, int> table;
+
+        table.insert(42, 50);
+        table.insert(10, 15);
+        table.insert(27, 60);
+
+        REQUIRE(table.size() == 3);
+        REQUIRE_FALSE(table.empty());
+
+        table.clear();
+
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+        REQUIRE_FALSE(table.contains(42));
+        REQUIRE_FALSE(table.contains(10));
+        REQUIRE_FALSE(table.contains(27));
+        REQUIRE(table.bucket_count() == 8);
+    }
+
+    SECTION("clear() works when multiple entries share a bucket")
+    {
+        HashTable<int, int> table{1};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE_FALSE(table.empty());
+        REQUIRE(table.size() == 3);
+        REQUIRE(table.bucket_count() == 1);
+
+        table.clear();
+
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+        REQUIRE(table.bucket_count() == 1);
+    }
+
+    SECTION("Inserting new entries after calling clear() works")
+    {
+        HashTable<int, int> table;
+        table.insert(42, 50);
+        table.insert(10, 15);
+        table.insert(27, 60);
+
+        REQUIRE(table.size() == 3);
+
+        table.clear();
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+
+        table.insert(10, 100);
+
+        REQUIRE_FALSE(table.empty());
+        REQUIRE(table.size() == 1);
+        REQUIRE(table.contains(10));
+    }
+
+    SECTION("Calling clear() multiple times is safe")
+    {
+        HashTable<int, int> table;
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+
+        table.clear();
+        table.clear();
+
+        REQUIRE(table.empty());
+        REQUIRE(table.size() == 0);
+        REQUIRE(table.bucket_count() == 8);
     }
 }

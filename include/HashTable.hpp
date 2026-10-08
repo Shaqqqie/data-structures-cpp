@@ -80,6 +80,39 @@ public:
         return true;
     }
 
+    bool erase(const Key &key)
+    {
+        const std::size_t index{bucket_index(key)};
+
+        auto &bucket = buckets_[index];
+
+        std::size_t list_index{};
+
+        for (const auto &entry : bucket)
+        {
+            if (key == entry.key)
+            {
+                bucket.erase(list_index);
+                --size_;
+                return true;
+            }
+
+            ++list_index;
+        }
+
+        return false;
+    }
+
+    void clear()
+    {
+        for (auto &bucket : buckets_)
+        {
+            bucket.clear();
+        }
+
+        size_ = 0;
+    }
+    
     // Element Access
     [[nodiscard]] bool contains(const Key &key) const
     {
