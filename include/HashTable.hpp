@@ -76,6 +76,32 @@ public:
         }
     }
 
+    HashTable(const HashTable &other) = default;
+
+    HashTable &operator=(const HashTable &other) = default;
+
+    HashTable(HashTable &&other) noexcept
+        : buckets_{std::move(other.buckets_)}, size_{other.size_}, max_load_factor_{other.max_load_factor_}
+    {
+        other.size_ = 0;
+    }
+
+    HashTable &operator=(HashTable &&other) noexcept
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        buckets_ = std::move(other.buckets_);
+        size_ = std::move(other.size_);
+        max_load_factor_ = std::move(other.max_load_factor_);
+
+        other.size_ = 0;
+
+        return *this;
+    }
+
     // Capacity / State
     [[nodiscard]] bool empty() const noexcept
     {
@@ -94,6 +120,11 @@ public:
 
     [[nodiscard]] float load_factor() const noexcept
     {
+        if (bucket_count() == 0)
+        {
+            return 0.0f;
+        }
+
         return static_cast<float>(size_) / bucket_count();
     }
 
@@ -105,6 +136,11 @@ public:
     // Modifiers
     bool insert(const Key &key, const Value &value)
     {
+        if (bucket_count() == 0)
+        {
+            rehash(8);
+        }
+
         std::size_t index{bucket_index(key)};
 
         // Duplicate key check
@@ -118,12 +154,6 @@ public:
 
         // Predict load factor after insertion
         auto load_factor_after_insert = static_cast<float>(size_ + 1) / bucket_count();
-
-        std::cout << "size: " << size_
-                  << ", buckets: " << bucket_count()
-                  << ", predicted load factor: " << load_factor_after_insert
-                  << ", maximum: " << max_load_factor()
-                  << '\n';
 
         // Rehash if necessary
         if (load_factor_after_insert > max_load_factor())
@@ -141,6 +171,11 @@ public:
 
     bool erase(const Key &key)
     {
+        if (bucket_count() == 0)
+        {
+            return false;
+        }
+
         const std::size_t index{bucket_index(key)};
 
         auto &bucket = buckets_[index];
@@ -175,6 +210,11 @@ public:
     // Element Access
     [[nodiscard]] bool contains(const Key &key) const
     {
+        if (empty())
+        {
+            return false;
+        }
+
         std::size_t index{bucket_index(key)};
 
         const auto &bucket = buckets_[index];
@@ -192,6 +232,11 @@ public:
 
     Value &at(const Key &key)
     {
+        if (empty())
+        {
+            throw std::out_of_range("No buckets present.");
+        }
+
         const std::size_t index{bucket_index(key)};
 
         auto &bucket = buckets_[index];
@@ -209,6 +254,11 @@ public:
 
     const Value &at(const Key &key) const
     {
+        if (empty())
+        {
+            throw std::out_of_range("No buckets present.");
+        }
+
         const std::size_t index{bucket_index(key)};
 
         const auto &bucket = buckets_[index];

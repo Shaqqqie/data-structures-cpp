@@ -23,23 +23,47 @@ namespace
         ThrowOnCopy(const ThrowOnCopy &other)
             : value{other.value}
         {
-           if (should_throw)
-           {
-            throw std::runtime_error("Copy failed");
-           }
+            if (should_throw)
+            {
+                throw std::runtime_error("Copy failed");
+            }
         }
 
         ThrowOnCopy(ThrowOnCopy &&other) noexcept = default;
         ThrowOnCopy &operator=(const ThrowOnCopy &) = default;
         ThrowOnCopy &operator=(ThrowOnCopy &&) noexcept = default;
     };
-}
 
-TEST_CASE("ThrowOnCopy direct exception diagnostic", "[ThrowOnCopy]")
-{
-    REQUIRE_THROWS_AS(
-        throw std::runtime_error("Direct throw"),
-        std::runtime_error);
+    struct ThrowOnAssignment
+    {
+        int value;
+
+        static inline bool should_throw = false;
+
+        ThrowOnAssignment() : value{0} {}
+
+        explicit ThrowOnAssignment(int v) : value{v} {}
+
+        ThrowOnAssignment &operator=(const ThrowOnAssignment &other)
+        {
+            if (should_throw)
+            {
+                throw std::runtime_error("Copy assignment failed");
+            }
+
+            value = other.value;
+
+            return *this;
+        }
+    };
+
+    struct ResetThrowFlag
+    {
+        ~ResetThrowFlag()
+        {
+            ThrowOnCopy::should_throw = false;
+        }
+    };
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -508,7 +532,6 @@ TEST_CASE("HashTable clear() operations", "[HashTable]")
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // Rehashing
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-
 TEST_CASE("HashTable rehash() operations", "[HashTable]")
 {
     SECTION("HashTable automatically rehashes when load factor exceeds maximum")
@@ -609,5 +632,237 @@ TEST_CASE("HashTable rehash() operations", "[HashTable]")
             std::runtime_error);
 
         ThrowOnCopy::should_throw = false;
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// Copy Operations
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+TEST_CASE("HashTable copy operations", "[HashTable]")
+{
+    SECTION("Copy constructor creates an independent copy")
+    {
+        HashTable<int, int> original{8};
+
+        original.insert(10, 100);
+        original.insert(20, 200);
+
+        HashTable<int, int> copy{original};
+
+        REQUIRE(original.size() == 2);
+        REQUIRE(copy.size() == 2);
+
+        REQUIRE(original.bucket_count() == 8);
+        REQUIRE(copy.bucket_count() == 8);
+
+        REQUIRE(original.at(10) == 100);
+        REQUIRE(copy.at(10) == 100);
+        REQUIRE(original.at(20) == 200);
+        REQUIRE(copy.at(20) == 200);
+
+        copy.insert(30, 300);
+
+        REQUIRE(copy.size() == 3);
+        REQUIRE(copy.contains(30));
+        REQUIRE(copy.at(30) == 300);
+
+        REQUIRE(original.size() == 2);
+        REQUIRE_FALSE(original.contains(30));
+
+        copy.at(10) = 999;
+
+        REQUIRE(copy.at(10) == 999);
+        REQUIRE(original.at(10) == 100);
+    }
+
+    SECTION("Copy assignment replaces existing entries")
+    {
+        HashTable<int, int> source{8};
+        source.insert(10, 100);
+        source.insert(20, 200);
+
+        HashTable<int, int> destination{4};
+        destination.insert(99, 999);
+
+        destination = source;
+
+        REQUIRE(destination.size() == 2);
+        REQUIRE(destination.bucket_count() == 8);
+        REQUIRE_FALSE(destination.contains(99));
+        REQUIRE(destination.contains(10));
+        REQUIRE(destination.contains(20));
+
+        destination.at(10) = 450;
+
+        REQUIRE(destination.at(10) == 450);
+        REQUIRE(source.at(10) == 100);
+    }
+
+    SECTION("Self-copy assignment preserves HashTable")
+    {
+        HashTable<int, int> table{8};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+
+        table = table;
+
+        REQUIRE(table.size() == 2);
+        REQUIRE(table.bucket_count() == 8);
+        REQUIRE(table.contains(10));
+        REQUIRE(table.contains(20));
+        REQUIRE(table.at(10) == 100);
+        REQUIRE(table.at(20) == 200);
+    }
+
+    SECTION("Copy assignment preserves destination if copying throws")
+    {
+        HashTable<int, ThrowOnCopy> source{8};
+        source.insert(10, ThrowOnCopy(100));
+        source.insert(20, ThrowOnCopy(200));
+
+        HashTable<int, ThrowOnCopy> destination{4};
+        destination.insert(30, ThrowOnCopy(300));
+
+        ThrowOnCopy::should_throw = true;
+        ResetThrowFlag guard;
+
+        REQUIRE_THROWS_AS(destination = source, std::runtime_error);
+
+        REQUIRE(destination.size() == 1);
+        REQUIRE(destination.bucket_count() == 4);
+        REQUIRE(destination.at(30).value == 300);
+
+        REQUIRE(source.size() == 2);
+        REQUIRE(source.bucket_count() == 8);
+        REQUIRE(source.at(10).value == 100);
+        REQUIRE(source.at(20).value == 200);
+    }
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// Move Operations
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+TEST_CASE("HashTable move operations", "[HashTable]")
+{
+    SECTION("Move assignment replaces existing entries")
+    {
+        HashTable<int, int> source{8};
+        source.insert(10, 100);
+        source.insert(20, 200);
+
+        HashTable<int, int> destination{4};
+        destination.insert(99, 999);
+
+        destination = std::move(source);
+
+        REQUIRE(destination.size() == 2);
+        REQUIRE(destination.bucket_count() == 8);
+        REQUIRE_FALSE(destination.contains(99));
+        REQUIRE(destination.contains(10));
+        REQUIRE(destination.contains(20));
+
+        REQUIRE(destination.at(10) == 100);
+        REQUIRE(destination.at(20) == 200);
+
+        REQUIRE(source.empty());
+        REQUIRE(source.size() == 0);
+        REQUIRE(source.bucket_count() == 0);
+    }
+
+    SECTION("Self-move assignment preserves HashTable")
+    {
+        HashTable<int, int> table{8};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+
+        table = std::move(table);
+
+        REQUIRE(table.size() == 2);
+        REQUIRE(table.bucket_count() == 8);
+        REQUIRE(table.contains(10));
+        REQUIRE(table.contains(20));
+    }
+
+    SECTION("Move constructor transfers ownership")
+    {
+        HashTable<int, int> source{8};
+
+        source.insert(10, 100);
+        source.insert(20, 200);
+
+        HashTable<int, int> destination{std::move(source)};
+
+        REQUIRE(destination.size() == 2);
+        REQUIRE(destination.bucket_count() == 8);
+        REQUIRE(destination.contains(10));
+        REQUIRE(destination.contains(20));
+
+        REQUIRE(source.empty());
+        REQUIRE(source.bucket_count() == 0);
+    }
+
+    SECTION("Moved-from HashTable can be reused")
+    {
+        HashTable<int, int> source{8};
+        source.insert(10, 100);
+
+        HashTable<int, int> destination{std::move(source)};
+
+        REQUIRE(source.empty());
+        REQUIRE(source.bucket_count() == 0);
+        REQUIRE(source.load_factor() == 0.0f);
+
+        REQUIRE(source.insert(20, 200));
+
+        REQUIRE(source.size() == 1);
+        REQUIRE(source.bucket_count() == 8);
+        REQUIRE(source.contains(20));
+        REQUIRE(source.at(20) == 200);
+
+        REQUIRE(destination.at(10) == 100);
+    }
+
+    SECTION("Moved-from HashTable handles empty operations")
+    {
+        HashTable<int, int> source{8};
+
+        source.insert(10, 100);
+
+        HashTable<int, int> destination{std::move(source)};
+
+        REQUIRE(source.empty());
+        REQUIRE(source.bucket_count() == 0);
+        REQUIRE_FALSE(source.contains(10));
+        REQUIRE_FALSE(source.erase(10));
+        REQUIRE_THROWS_AS(source.at(10), std::out_of_range);
+        REQUIRE(source.load_factor() == 0.0f);
+
+        source.clear();
+        REQUIRE(source.empty());
+        REQUIRE(source.bucket_count() == 0);
+
+        REQUIRE(destination.size() == 1);
+        REQUIRE(destination.at(10) == 100);
+    }
+
+    SECTION("Moved-from HashTable can be reused")
+    {
+        HashTable<int, int> source{8};
+        source.insert(10, 100);
+
+        HashTable<int, int> destination{std::move(source)};
+
+        REQUIRE(source.insert(20, 200));
+
+        REQUIRE_FALSE(source.empty());
+        REQUIRE(source.size() == 1);
+        REQUIRE(source.bucket_count() == 8);
+        REQUIRE(source.contains(20));
+        REQUIRE(source.at(20) == 200);
+        REQUIRE_FALSE(source.contains(10));
+
+        REQUIRE(destination.size() == 1);
+        REQUIRE(destination.at(10) == 100);
     }
 }
