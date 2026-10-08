@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include "HashTable.hpp"
 
@@ -6,6 +7,40 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
+namespace
+{
+    struct ThrowOnCopy
+    {
+        int value;
+        static inline bool should_throw = false;
+
+        explicit ThrowOnCopy(int v)
+            : value(v)
+        {
+        }
+
+        ThrowOnCopy(const ThrowOnCopy &other)
+            : value{other.value}
+        {
+           if (should_throw)
+           {
+            throw std::runtime_error("Copy failed");
+           }
+        }
+
+        ThrowOnCopy(ThrowOnCopy &&other) noexcept = default;
+        ThrowOnCopy &operator=(const ThrowOnCopy &) = default;
+        ThrowOnCopy &operator=(ThrowOnCopy &&) noexcept = default;
+    };
+}
+
+TEST_CASE("ThrowOnCopy direct exception diagnostic", "[ThrowOnCopy]")
+{
+    REQUIRE_THROWS_AS(
+        throw std::runtime_error("Direct throw"),
+        std::runtime_error);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 // Construction / State
@@ -350,14 +385,18 @@ TEST_CASE("HashTable insert() operations", "[HashTable]")
 
     SECTION("Inserting colliding keys works")
     {
-        HashTable<int, int> table{1};
+        HashTable<int, int> table{};
 
-        REQUIRE(table.insert(10, 100));
-        REQUIRE(table.insert(20, 200));
-        REQUIRE(table.insert(30, 300));
+        REQUIRE(table.insert(1, 100));
+        REQUIRE(table.insert(9, 900));
+        REQUIRE(table.insert(17, 1700));
 
         REQUIRE(table.size() == 3);
-        REQUIRE(table.bucket_count() == 1);
+        REQUIRE(table.bucket_count() == 8);
+
+        REQUIRE(table.at(1) == 100);
+        REQUIRE(table.at(9) == 900);
+        REQUIRE(table.at(17) == 1700);
     }
 
     SECTION("Inserting string keys works")
@@ -413,21 +452,21 @@ TEST_CASE("HashTable clear() operations", "[HashTable]")
 
     SECTION("clear() works when multiple entries share a bucket")
     {
-        HashTable<int, int> table{1};
+        HashTable<int, int> table{8};
 
-        table.insert(10, 100);
-        table.insert(20, 200);
-        table.insert(30, 300);
+        table.insert(1, 100);
+        table.insert(9, 900);
+        table.insert(17, 1700);
 
         REQUIRE_FALSE(table.empty());
         REQUIRE(table.size() == 3);
-        REQUIRE(table.bucket_count() == 1);
+        REQUIRE(table.bucket_count() == 8);
 
         table.clear();
 
         REQUIRE(table.empty());
         REQUIRE(table.size() == 0);
-        REQUIRE(table.bucket_count() == 1);
+        REQUIRE(table.bucket_count() == 8);
     }
 
     SECTION("Inserting new entries after calling clear() works")
@@ -463,5 +502,112 @@ TEST_CASE("HashTable clear() operations", "[HashTable]")
         REQUIRE(table.empty());
         REQUIRE(table.size() == 0);
         REQUIRE(table.bucket_count() == 8);
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+// Rehashing
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+
+TEST_CASE("HashTable rehash() operations", "[HashTable]")
+{
+    SECTION("HashTable automatically rehashes when load factor exceeds maximum")
+    {
+        HashTable<int, int> table{4};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE(table.bucket_count() == 4);
+        REQUIRE(table.load_factor() == Catch::Approx(0.75f));
+
+        table.insert(40, 400);
+
+        REQUIRE(table.bucket_count() == 8);
+        REQUIRE(table.size() == 4);
+        REQUIRE(table.load_factor() == Catch::Approx(0.5f));
+
+        REQUIRE(table.at(10) == 100);
+        REQUIRE(table.at(20) == 200);
+        REQUIRE(table.at(30) == 300);
+        REQUIRE(table.at(40) == 400);
+    }
+
+    SECTION("HashTable handles repeated automatic rehashing")
+    {
+        HashTable<int, int> table{2};
+
+        for (int i{0}; i < 100; ++i)
+        {
+            table.insert(i, i * 10);
+        }
+
+        REQUIRE(table.size() == 100);
+        REQUIRE(table.bucket_count() == 256);
+        REQUIRE(table.load_factor() <= table.max_load_factor());
+
+        for (int i{0}; i < 100; ++i)
+        {
+            REQUIRE(table.at(i) == i * 10);
+        }
+    }
+
+    SECTION("Duplicate insertion does not trigger rehashing")
+    {
+        HashTable<int, int> table{4};
+
+        table.insert(10, 100);
+        table.insert(20, 200);
+        table.insert(30, 300);
+
+        REQUIRE(table.size() == 3);
+        REQUIRE(table.bucket_count() == 4);
+
+        REQUIRE_FALSE(table.insert(20, 999));
+        REQUIRE(table.at(20) == 200);
+        REQUIRE(table.size() == 3);
+        REQUIRE(table.bucket_count() == 4);
+    }
+
+    SECTION("Falied rehash preserved original entries")
+    {
+        HashTable<int, ThrowOnCopy> table{4};
+        table.insert(10, ThrowOnCopy(100));
+        table.insert(20, ThrowOnCopy(200));
+        table.insert(30, ThrowOnCopy(300));
+
+        REQUIRE(table.size() == 3);
+        REQUIRE(table.bucket_count() == 4);
+        REQUIRE(table.load_factor() == Catch::Approx(0.75f));
+
+        ThrowOnCopy::should_throw = true;
+        REQUIRE_THROWS_AS(table.insert(40, ThrowOnCopy(400)), std::runtime_error);
+
+        ThrowOnCopy::should_throw = false;
+        REQUIRE(table.size() == 3);
+        REQUIRE(table.bucket_count() == 4);
+        REQUIRE(table.at(10).value == 100);
+        REQUIRE(table.at(20).value == 200);
+        REQUIRE(table.at(30).value == 300);
+    }
+
+    SECTION("ThrowOnCopy throws when copied")
+    {
+        ThrowOnCopy original{100};
+
+        ThrowOnCopy::should_throw = true;
+
+        REQUIRE(ThrowOnCopy::should_throw);
+
+        REQUIRE_THROWS_AS(
+            [&]()
+            {
+                ThrowOnCopy copy{original};
+                (void)copy;
+            }(),
+            std::runtime_error);
+
+        ThrowOnCopy::should_throw = false;
     }
 }

@@ -5,7 +5,9 @@
 
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <stdexcept>
+#include <utility>
 
 template <typename Key, typename Value>
 class HashTable
@@ -19,10 +21,41 @@ private:
 
     DynamicArray<LinkedList<Entry>> buckets_;
     std::size_t size_;
+    float max_load_factor_{0.75f};
 
     std::size_t bucket_index(const Key &key) const
     {
         return std::hash<Key>{}(key) % bucket_count();
+    }
+
+    void rehash(std::size_t new_bucket_count)
+    {
+        if (new_bucket_count == 0)
+        {
+            throw std::invalid_argument("HashTable must have buckets.");
+        }
+
+        // Create new array and construct empty lists
+        DynamicArray<LinkedList<Entry>> new_buckets_;
+        new_buckets_.reserve(new_bucket_count);
+        for (std::size_t i{0}; i < new_bucket_count; ++i)
+        {
+            new_buckets_.push_back(LinkedList<Entry>{});
+        }
+
+        // Calculate new index of every entry for the new array,
+        // and push entry into new array
+        for (const auto &bucket : buckets_)
+        {
+            for (const auto &entry : bucket)
+            {
+                std::size_t index{std::hash<Key>{}(entry.key) % new_bucket_count};
+                new_buckets_[index].push_back(entry);
+            }
+        }
+
+        // Move new array into old array
+        buckets_ = std::move(new_buckets_);
     }
 
 public:
@@ -59,14 +92,23 @@ public:
         return buckets_.size();
     }
 
+    [[nodiscard]] float load_factor() const noexcept
+    {
+        return static_cast<float>(size_) / bucket_count();
+    }
+
+    [[nodiscard]] float max_load_factor() const noexcept
+    {
+        return max_load_factor_;
+    }
+
     // Modifiers
     bool insert(const Key &key, const Value &value)
     {
         std::size_t index{bucket_index(key)};
 
-        auto &bucket = buckets_[index];
-
-        for (const auto &entry : bucket)
+        // Duplicate key check
+        for (const auto &entry : buckets_[index])
         {
             if (key == entry.key)
             {
@@ -74,7 +116,24 @@ public:
             }
         }
 
-        bucket.push_back(Entry{key, value});
+        // Predict load factor after insertion
+        auto load_factor_after_insert = static_cast<float>(size_ + 1) / bucket_count();
+
+        std::cout << "size: " << size_
+                  << ", buckets: " << bucket_count()
+                  << ", predicted load factor: " << load_factor_after_insert
+                  << ", maximum: " << max_load_factor()
+                  << '\n';
+
+        // Rehash if necessary
+        if (load_factor_after_insert > max_load_factor())
+        {
+            rehash(bucket_count() * 2);
+            index = bucket_index(key);
+        }
+
+        // Insert into correct bucket
+        buckets_[index].push_back(Entry{key, value});
         ++size_;
 
         return true;
@@ -112,7 +171,7 @@ public:
 
         size_ = 0;
     }
-    
+
     // Element Access
     [[nodiscard]] bool contains(const Key &key) const
     {
