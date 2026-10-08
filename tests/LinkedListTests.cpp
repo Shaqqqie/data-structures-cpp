@@ -3,6 +3,41 @@
 #include "LinkedList.hpp"
 
 #include <utility>
+
+namespace
+{
+    struct ThrowOnCopy
+    {
+        int value;
+        static inline bool should_throw = false;
+
+        explicit ThrowOnCopy(int v)
+        : value{v}
+        {}
+
+        ThrowOnCopy(const ThrowOnCopy &other)
+        : value{other.value}
+        {
+            if (should_throw)
+            {
+                throw std::runtime_error("Copy failed");
+            }
+        }
+
+        ThrowOnCopy(ThrowOnCopy &&other) noexcept = default;
+        ThrowOnCopy &operator=(const ThrowOnCopy &) = default;
+        ThrowOnCopy &operator=(ThrowOnCopy &&) noexcept = default;
+    };
+
+    struct ResetThrowFlag
+    {
+        ~ResetThrowFlag()
+        {
+            ThrowOnCopy::should_throw = false;
+        }
+    };
+}
+
 TEST_CASE("Testing default values for newly created LinkedList")
 {
     LinkedList<int> list;
@@ -38,6 +73,28 @@ TEST_CASE("LinkedList can be copy assigned")
 
     REQUIRE(copy.getSize() == 3);
     REQUIRE(copy.front() == 10);
+}
+
+TEST_CASE("LinkedList copy assignment preserves destination if copying throws", "[LinkedList]")
+{
+    LinkedList<ThrowOnCopy> source;
+    source.push_back(ThrowOnCopy{10});
+    source.push_back(ThrowOnCopy{20});
+
+    LinkedList<ThrowOnCopy> destination;
+    destination.push_back(ThrowOnCopy{99});
+
+    ThrowOnCopy::should_throw = true;
+    ResetThrowFlag guard;
+
+    REQUIRE_THROWS_AS(destination = source, std::runtime_error);
+
+    REQUIRE(destination.getSize() == 1);
+    REQUIRE(destination.front().value == 99);
+
+    REQUIRE(source.getSize() == 2);
+    REQUIRE(source.front().value == 10);
+    REQUIRE(source.back().value == 20);
 }
 
 TEST_CASE("LinkedList handles self assignment")

@@ -37,7 +37,7 @@ public:
         Iterator &operator++()
         {
             ++p;
-            
+
             return *this;
         }
 
@@ -53,7 +53,7 @@ public:
         Iterator &operator--()
         {
             --p;
-            
+
             return *this;
         }
 
@@ -84,14 +84,14 @@ public:
         Iterator &operator+=(std::ptrdiff_t offset)
         {
             p += offset;
-            
+
             return *this;
         }
 
         Iterator &operator-=(std::ptrdiff_t offset)
         {
             p -= offset;
-            
+
             return *this;
         }
 
@@ -160,7 +160,7 @@ public:
             return *p;
         }
 
-        ConstIterator &operator++() 
+        ConstIterator &operator++()
         {
             ++p;
 
@@ -176,7 +176,7 @@ public:
             return old;
         }
 
-        ConstIterator &operator--() 
+        ConstIterator &operator--()
         {
             --p;
 
@@ -197,7 +197,7 @@ public:
             return ConstIterator{p + offset};
         }
 
-        ConstIterator operator-(std::ptrdiff_t offset) const 
+        ConstIterator operator-(std::ptrdiff_t offset) const
         {
             return ConstIterator{p - offset};
         }
@@ -207,14 +207,14 @@ public:
             return p - other.p;
         }
 
-        ConstIterator &operator+=(std::ptrdiff_t offset) 
+        ConstIterator &operator+=(std::ptrdiff_t offset)
         {
             p += offset;
-            
+
             return *this;
         }
 
-        ConstIterator &operator-=(std::ptrdiff_t offset) 
+        ConstIterator &operator-=(std::ptrdiff_t offset)
         {
             p -= offset;
 
@@ -307,7 +307,7 @@ public:
         : data_{nullptr}, size_{values.size()}, capacity_{values.size()}
     {
         data_ = new T[capacity_];
-        
+
         T *it = data_;
         for (const T &value : values)
         {
@@ -335,14 +335,22 @@ public:
 
         if (other.capacity_ > 0)
         {
-            new_array = new T[other.capacity_];
-
-            for (std::size_t i{0}; i < other.size_; ++i)
+            try
             {
-                new_array[i] = other.data_[i];
+                new_array = new T[other.capacity_];
+
+                for (std::size_t i{0}; i < other.size_; ++i)
+                {
+                    new_array[i] = other.data_[i];
+                }
+            }
+            catch (...)
+            {
+                delete[] new_array;
+                throw;
             }
         }
-
+        
         delete[] data_;
 
         data_ = new_array;
@@ -379,7 +387,7 @@ public:
             return false;
         }
 
-        for(std::size_t i{0}; i < size_; ++i)
+        for (std::size_t i{0}; i < size_; ++i)
         {
             if (data_[i] != other.data_[i])
             {
@@ -446,10 +454,10 @@ public:
         if (size_ == 0)
         {
             delete[] data_;
-            
+
             data_ = nullptr;
             capacity_ = 0;
-            
+
             return;
         }
 

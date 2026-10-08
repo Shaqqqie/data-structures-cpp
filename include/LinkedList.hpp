@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 
 template <typename T>
 class LinkedList
@@ -86,6 +87,13 @@ private:
     Node *tail;
     std::size_t size;
 
+    void swap(LinkedList &other) noexcept
+    {
+        std::swap(head, other.head);
+        std::swap(tail, other.tail);
+        std::swap(size, other.size);
+    }
+
 public:
     // Construction / Ownership
     LinkedList()
@@ -96,12 +104,20 @@ public:
     LinkedList(const LinkedList &other)
         : head{nullptr}, tail{nullptr}, size{0}
     {
-        Node *current{other.head};
-
-        while (current)
+        try
         {
-            push_back(current->value);
-            current = current->next;
+            const Node *current{other.head};
+
+            while (current)
+            {
+                push_back(current->value);
+                current = current->next;
+            }
+        }
+        catch (...)
+        {
+            clear();
+            throw;
         }
     }
 
@@ -112,7 +128,7 @@ public:
         other.tail = nullptr;
         other.size = 0;
     }
-    
+
     LinkedList &operator=(const LinkedList &other)
     {
         if (this == &other)
@@ -120,15 +136,8 @@ public:
             return *this;
         }
 
-        clear();
-
-        const Node *current{other.head};
-
-        while (current)
-        {
-            push_back(current->value);
-            current = current->next;
-        }
+        LinkedList temp{other};
+        swap(temp);
 
         return *this;
     }
@@ -180,7 +189,7 @@ public:
         Node *current{head};
         std::size_t count{};
 
-        while(count != index)
+        while (count != index)
         {
             current = current->next;
             ++count;
@@ -237,7 +246,7 @@ public:
 
         return tail->value;
     }
-    
+
     const T &back() const
     {
         if (!tail)
