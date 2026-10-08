@@ -4,6 +4,7 @@
 #include "LinkedList.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <stdexcept>
 
 template <typename Key, typename Value>
@@ -19,9 +20,15 @@ private:
     DynamicArray<LinkedList<Entry>> buckets_;
     std::size_t size_;
 
+    std::size_t bucket_index(const Key &key) const
+    {
+        return std::hash<Key>{}(key) % bucket_count();
+    }
+
 public:
+    // Construction / Ownership
     explicit HashTable(std::size_t bucket_count = 8)
-        : buckets_{}, size_ { 0 }
+        : buckets_{}, size_{0}
     {
         if (bucket_count == 0)
         {
@@ -36,6 +43,7 @@ public:
         }
     }
 
+    // Capacity / State
     [[nodiscard]] bool empty() const noexcept
     {
         return size_ == 0;
@@ -49,5 +57,78 @@ public:
     [[nodiscard]] std::size_t bucket_count() const noexcept
     {
         return buckets_.size();
+    }
+
+    // Modifiers
+    bool insert(const Key &key, const Value &value)
+    {
+        std::size_t index{bucket_index(key)};
+
+        auto &bucket = buckets_[index];
+
+        for (const auto &entry : bucket)
+        {
+            if (key == entry.key)
+            {
+                return false;
+            }
+        }
+
+        bucket.push_back(Entry{key, value});
+        ++size_;
+
+        return true;
+    }
+
+    // Element Access
+    [[nodiscard]] bool contains(const Key &key) const
+    {
+        std::size_t index{bucket_index(key)};
+
+        const auto &bucket = buckets_[index];
+
+        for (const auto &entry : bucket)
+        {
+            if (key == entry.key)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    Value &at(const Key &key)
+    {
+        const std::size_t index{bucket_index(key)};
+
+        auto &bucket = buckets_[index];
+
+        for (auto &entry : bucket)
+        {
+            if (key == entry.key)
+            {
+                return entry.value;
+            }
+        }
+
+        throw std::out_of_range("No matching key exists.");
+    }
+
+    const Value &at(const Key &key) const
+    {
+        const std::size_t index{bucket_index(key)};
+
+        const auto &bucket = buckets_[index];
+
+        for (const auto &entry : bucket)
+        {
+            if (key == entry.key)
+            {
+                return entry.value;
+            }
+        }
+
+        throw std::out_of_range("No matching key exists.");
     }
 };
