@@ -8,7 +8,9 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 template <typename T>
 class Graph
@@ -346,5 +348,74 @@ public:
         }
 
         return count;
+    }
+
+    [[nodiscard]] DynamicArray<T> shortest_path(const T &start, const T &end) const
+    {
+        if (!contains(start) || !contains(end))
+        {
+            throw std::out_of_range("Vertex does not exist");
+        }
+
+        if (start == end)
+        {
+            return {start};
+        }
+        
+        Queue<T> queue;
+        std::unordered_set<T> visited;
+        std::unordered_map<T, T> parent;
+        DynamicArray<T> path;
+         
+        queue.push(start);
+        visited.insert(start);
+
+        while (!queue.empty())
+        {
+            auto vertex = queue.front();
+            queue.pop();
+
+            if (vertex == end)
+            {
+                break;
+            }
+
+            for (const auto &neighbor : neighbors(vertex))
+            {
+                if (!visited.contains(neighbor))
+                {
+                    queue.push(neighbor);
+                    visited.insert(neighbor);
+                    parent.emplace(neighbor, vertex);
+                }
+            }
+        }
+
+        if (!visited.contains(end))
+        {
+            return {};
+        }
+
+        
+        T current = end;
+
+        while(current != start)
+        {
+            path.push_back(current);
+            current = parent.at(current);
+        }
+        path.push_back(start);
+
+        std::size_t left{0};
+        std::size_t right{path.size() - 1};
+
+        while (left < right)
+        {
+            std::swap(path[left], path[right]);
+            ++left;
+            --right;
+        }
+
+        return path;
     }
 };

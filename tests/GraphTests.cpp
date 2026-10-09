@@ -926,3 +926,158 @@ TEST_CASE("Graph connected_components() operations", "[Graph]")
         REQUIRE(graph.connected_components() == 2);
     }
 }
+
+TEST_CASE("Graph shortest_path() operations", "[Graph]")
+{
+    SECTION("Throws when start vertex does not exist")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        REQUIRE_THROWS_AS(graph.shortest_path(15, 30), std::out_of_range);
+    }
+
+    SECTION("Throws when end vertex does not exist")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        REQUIRE_THROWS_AS(graph.shortest_path(10, 50), std::out_of_range);
+    }
+
+    SECTION("Returns one vertex when start equals end")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        const DynamicArray<int> expected{10};
+
+        const auto result = graph.shortest_path(10, 10);
+
+        REQUIRE(result.size() == 1);
+        REQUIRE(result == expected);
+    }
+
+    SECTION("Returns the correct path for two directly connected vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20);
+
+        const DynamicArray<int> expected{10, 20};
+
+        REQUIRE(graph.shortest_path(10, 20) == expected);
+    }
+
+    SECTION("Returns the correct path for three vertices in a chain")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        const DynamicArray<int> expected{10, 20, 30};
+
+        const auto result = graph.shortest_path(10, 30);
+
+        REQUIRE(result.size() == 3);
+        REQUIRE(result == expected);
+    }
+
+    SECTION("Returns a shortest path when there are multiple possible paths")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(10, 30);
+        graph.add_edge(20, 40);
+        graph.add_edge(20, 50);
+        graph.add_edge(30, 50);
+
+        const DynamicArray<int> result{graph.shortest_path(10, 50)};
+
+        REQUIRE(result.size() == 3);
+        REQUIRE(result[0] == 10);
+        REQUIRE(result[2] == 50);
+
+        REQUIRE((result[1] == 20 || result[1] == 30));
+    }
+
+    SECTION("Returns empty array when vertices are disconnected")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        const DynamicArray<int> expected{};
+
+        REQUIRE(graph.shortest_path(10, 20) == expected);
+    }
+
+    SECTION("BFS does not revisit vertices indefinitely for graph with a cycle")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 10);
+
+        const DynamicArray<int> expected{10, 30};
+
+        const auto result = graph.shortest_path(10, 30);
+
+        REQUIRE(result.size() == 2);
+        REQUIRE(result == expected);
+    }
+
+    SECTION("Does not modify vertices or edges")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 10);
+
+        const auto result = graph.shortest_path(10, 30);
+
+        REQUIRE(graph.contains(10));
+        REQUIRE(graph.contains(20));
+        REQUIRE(graph.contains(30));
+        REQUIRE(graph.has_edge(10, 20));
+        REQUIRE(graph.has_edge(20, 30));
+        REQUIRE(graph.has_edge(30, 10));
+    }
+}
