@@ -732,3 +732,89 @@ TEST_CASE("Graphs handles move construction", "[Graph]")
     REQUIRE(original.vertex_count() == 0);
     REQUIRE(original.edge_count() == 0);
 }
+
+//--------------------------------------------------------------------------------------------------------------------------------------------//
+//  Algorithms
+//-------------------------------------------------------------------------------------------------------------------------------------------//
+TEST_CASE("Graph has_cycle() operations", "[Graph]")
+{
+    SECTION("returns false for an empty graph")
+    {
+        Graph<int> graph;
+
+        REQUIRE_FALSE(graph.has_cycle());
+    }
+
+    SECTION("Returns false for a graph with as single vertex")
+    {
+        Graph<int> graph;
+
+        graph.add_vertex(10);
+
+        REQUIRE_FALSE(graph.has_cycle());
+    }
+
+    SECTION("Returns false for two connected vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20);
+
+        REQUIRE_FALSE(graph.has_cycle());
+    }
+
+    SECTION("Detects a triangle")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 10);
+
+        REQUIRE(graph.has_cycle());
+    }
+
+    SECTION("Detects a cycle in a disconnected graph")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+        graph.add_vertex(60);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        graph.add_edge(40, 50);
+        graph.add_edge(50, 60);
+        graph.add_edge(60, 40);
+
+        REQUIRE(graph.has_cycle());
+    }
+
+    SECTION("Returns false for disconnected graph with no cycle")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+        graph.add_vertex(60);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        graph.add_edge(40, 50);
+        graph.add_edge(50, 60);
+
+        REQUIRE_FALSE(graph.has_cycle());
+    }
+}

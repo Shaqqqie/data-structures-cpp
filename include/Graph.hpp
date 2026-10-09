@@ -6,6 +6,7 @@
 #include "Stack.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -19,7 +20,35 @@ private:
         LinkedList<T> neighbors;
     };
 
+    struct StackEntry
+    {
+        T vertex;
+        std::optional<T> parent;
+    };
+
     DynamicArray<Vertex> vertices_;
+
+    bool has_cycle_dfs(const T &current, const std::optional<T> &parent, std::unordered_set<T> &visited) const
+    {
+        visited.insert(current);
+
+        for (const auto &neighbor : neighbors(current))
+        {
+            if (!visited.contains(neighbor))
+            {
+                if (has_cycle_dfs(neighbor, current, visited))
+                {
+                    return true;
+                }
+            }
+            else if (!parent.has_value() || neighbor != parent.value())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 public:
     // Construction / Ownership
@@ -278,5 +307,23 @@ public:
         }
 
         return result;
+    }
+
+    [[nodiscard]] bool has_cycle() const
+    {
+        std::unordered_set<T> visited;
+
+        for (const auto &vertex : vertices_)
+        {
+            if (!visited.contains(vertex.value))
+            {
+                if (has_cycle_dfs(vertex.value, std::nullopt, visited))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 };
