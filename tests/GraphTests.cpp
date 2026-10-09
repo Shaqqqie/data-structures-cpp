@@ -818,3 +818,111 @@ TEST_CASE("Graph has_cycle() operations", "[Graph]")
         REQUIRE_FALSE(graph.has_cycle());
     }
 }
+
+TEST_CASE("Graph connected_components() operations", "[Graph]")
+{
+    SECTION("Returns 0 for an empty graph")
+    {
+        Graph<int> graph;
+
+        REQUIRE(graph.connected_components() == 0);
+    }
+
+    SECTION("Returns 1 for a single vertex")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+
+        REQUIRE(graph.connected_components() == 1);
+    }
+
+    SECTION("Returns 1 for three connected vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        REQUIRE(graph.connected_components() == 1);
+    }
+
+    SECTION("Returns 3 for three isolated vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        REQUIRE(graph.connected_components() == 3);
+    }
+
+    SECTION("Returns 2 for two disconnected components")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(40, 50);
+
+        REQUIRE(graph.connected_components() == 2);
+    }
+
+    SECTION("Returns 1 for graph with a cycle")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 10);
+
+        REQUIRE(graph.connected_components() == 1);
+    }
+
+    SECTION("Returns correct total for graph with mixed components and isolated vertices")
+    {
+        Graph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+        graph.add_vertex(60);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+        graph.add_edge(30, 10);
+
+        graph.add_edge(40, 50);
+
+        REQUIRE(graph.connected_components() == 3);
+    }
+
+    SECTION("Removing an edge can split a connected component")
+    {
+        Graph<int> graph;
+
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20);
+        graph.add_edge(20, 30);
+
+        REQUIRE(graph.connected_components() == 1);
+
+        graph.remove_edge(20, 30);
+
+        REQUIRE(graph.connected_components() == 2);
+    }
+}

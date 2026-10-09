@@ -155,7 +155,7 @@ public:
             return;
         }
 
-        for(auto &vertex : vertices_)
+        for (auto &vertex : vertices_)
         {
             if (value == vertex.value)
             {
@@ -178,7 +178,6 @@ public:
         }
 
         vertices_.erase(index);
-
     }
 
     void add_edge(const T &value, const T &other_value)
@@ -204,7 +203,7 @@ public:
 
     void remove_edge(const T &value, const T &other_value)
     {
-        if(!has_edge(value, other_value))
+        if (!has_edge(value, other_value))
         {
             return;
         }
@@ -223,7 +222,7 @@ public:
             if (other_value == vertex.value)
             {
                 auto index{vertex.neighbors.find(value)};
-                
+
                 if (index)
                 {
                     vertex.neighbors.erase(*index);
@@ -235,13 +234,12 @@ public:
     void clear() noexcept
     {
         vertices_.clear();
-        
     }
 
     // Traversal
     DynamicArray<T> bfs(const T &start) const
     {
-        if(!contains(start))
+        if (!contains(start))
         {
             throw std::out_of_range("Vertex does not exist.");
         }
@@ -253,7 +251,7 @@ public:
         queue.push(start);
         visited.insert(start);
 
-        while(!queue.empty())
+        while (!queue.empty())
         {
             auto vertex = queue.front();
 
@@ -288,7 +286,7 @@ public:
         stack.push(start);
         visited.insert(start);
 
-        while(!stack.empty())
+        while (!stack.empty())
         {
             auto vertex = stack.top();
 
@@ -325,5 +323,28 @@ public:
         }
 
         return false;
+    }
+
+    [[nodiscard]] std::size_t connected_components() const
+    {
+        std::unordered_set<T> visited;
+        std::size_t count{};
+
+        for (const auto &vertex : vertices_)
+        {
+            if (!visited.contains(vertex.value))
+            {
+                ++count;
+
+                const DynamicArray<T> connected_vertices{dfs(vertex.value)};
+
+                for (const auto &connected_vertex : connected_vertices)
+                {
+                    visited.insert(connected_vertex);
+                }
+            }
+        }
+
+        return count;
     }
 };
