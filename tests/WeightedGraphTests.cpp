@@ -2,6 +2,7 @@
 
 #include "WeightedGraph.hpp"
 
+#include <cmath>
 #include <stdexcept>
 
 TEST_CASE("WeightedGraph weight() operations", "[WeightedGraph]")
@@ -420,5 +421,370 @@ TEST_CASE("WeightedGraph clear() operations", "[WeightedGraph]")
         REQUIRE(graph.has_edge(50, 40));
         REQUIRE(graph.weight(40, 50) == 10.0);
         REQUIRE(graph.weight(50, 40) == 10.0);
+    }
+}
+
+TEST_CASE("Dijkstra tests", "[WeightedGraph]")
+{
+    SECTION("Throws for missing start vertex")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE_THROWS_AS(graph.shortest_distance(40, 20), std::out_of_range);
+    }
+
+    SECTION("Throws for missing end vertex")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE_THROWS_AS(graph.shortest_distance(10, 40), std::out_of_range);
+    }
+
+    SECTION("Returns 0.0 when start equals end")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE(graph.shortest_distance(10, 10) == 0.0);
+    }
+
+    SECTION("Returns correct distance for two directly connected vertices")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE(graph.shortest_distance(10, 20) == 5.0);
+    }
+
+    SECTION("Finds a cheaper indirect path")
+    {
+
+        WeightedGraph<int> graph;
+
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 5.0);
+        graph.add_edge(10, 30, 1.0);
+        graph.add_edge(30, 20, 2.0);
+
+        REQUIRE(graph.shortest_distance(10, 20) == 3.0);
+    }
+
+    SECTION("Finds a cheapest a path when there are multiple possible paths")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+
+        graph.add_edge(10, 20, 2.0);
+        graph.add_edge(10, 30, 1.0);
+        graph.add_edge(20, 50, 1.0);
+        graph.add_edge(30, 50, 1.0);
+        graph.add_edge(20, 40, 3.0);
+
+        REQUIRE(graph.shortest_distance(10, 50) == 2.0);
+    }
+
+    SECTION("Returns correct minimum cost for zero-weight edges")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 2.0);
+        graph.add_edge(20, 30, 0.0);
+
+        REQUIRE(graph.shortest_distance(10, 30) == 2.0);
+    }
+
+    SECTION("Returns the same distance in undirected graph for reverse direction")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 2.0);
+        graph.add_edge(20, 30, 5.0);
+
+        REQUIRE(graph.shortest_distance(10, 30) == 7.0);
+        REQUIRE(graph.shortest_distance(30, 10) == 7.0);
+        REQUIRE(graph.shortest_distance(10, 30) == graph.shortest_distance(30, 10));
+    }
+
+    SECTION("Returns infinity when destination is unreachable")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE(std::isinf(graph.shortest_distance(10, 30)));
+    }
+
+    SECTION("Handles outdated priority queue entries")
+    {
+
+        WeightedGraph<int> graph;
+
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+
+        graph.add_edge(10, 20, 10.0);
+        graph.add_edge(10, 30, 2.0);
+        graph.add_edge(30, 20, 3.0);
+        graph.add_edge(20, 40, 1.0);
+
+        REQUIRE(graph.shortest_distance(10, 40) == 6.0);
+
+        graph.add_vertex(50);
+        REQUIRE(std::isinf(graph.shortest_distance(10, 50)));
+    }
+
+    SECTION("Uses updated edge weights")
+    {
+        WeightedGraph<int> graph;
+
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 10.0);
+        graph.add_edge(10, 30, 2.0);
+        graph.add_edge(30, 20, 3.0);
+
+        REQUIRE(graph.shortest_distance(10, 20) == 5.0);
+
+        graph.add_edge(10, 20, 1.0);
+
+        REQUIRE(graph.shortest_distance(10, 20) == 1.0);
+        REQUIRE(graph.shortest_distance(20, 10) == 1.0);
+    }
+}
+
+TEST_CASE("Dijkstra shortest_path() operations", "[WeightedGraph]")
+{
+    SECTION("Throws for missing start vertex")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE_THROWS_AS(graph.shortest_path(30, 20), std::out_of_range);
+    }
+
+    SECTION("Throws for missing end vertex")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        REQUIRE_THROWS_AS(graph.shortest_path(10, 30), std::out_of_range);
+    }
+
+    SECTION("Returns start when start equal end")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        const DynamicArray<int> expected{10};
+        const auto path = graph.shortest_path(10, 10);
+
+        REQUIRE(path.size() == 1);
+        REQUIRE(path == expected);
+    }
+
+    SECTION("Returns correct path for two vertices with a direct connection")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        graph.add_edge(10, 20, 5.0);
+
+        const DynamicArray<int> expected{10, 20};
+
+        const auto path = graph.shortest_path(10, 20);
+
+        REQUIRE(path.size() == 2);
+        REQUIRE(path == expected);
+    }
+
+    SECTION("Reconstructs a cheaper indirect path")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 5.0);
+        graph.add_edge(10, 30, 1.0);
+        graph.add_edge(30, 20, 2.0);
+
+        const auto path = graph.shortest_path(10, 20);
+
+        REQUIRE(path.size() == 3);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 30);
+        REQUIRE(path[2] == 20);
+    }
+
+    SECTION("Returns the correct shortest path when there are multiple possible routes")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+        graph.add_vertex(40);
+        graph.add_vertex(50);
+
+        graph.add_edge(10, 20, 2.0);
+        graph.add_edge(10, 30, 1.5);
+        graph.add_edge(20, 50, 1.0);
+        graph.add_edge(30, 50, 1.0);
+        graph.add_edge(20, 40, 3.0);
+
+        const auto path = graph.shortest_path(10, 50);
+
+        REQUIRE(path.size() == 3);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 30);
+        REQUIRE(path[2] == 50);
+    }
+
+    SECTION("Returns an empty array for disconnected vertices")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+
+        REQUIRE(graph.shortest_path(10, 20).empty());
+    }
+
+    SECTION("For reverse direction it returns the reversed shortest path")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 5.0);
+        graph.add_edge(20, 30, 2.0);
+
+        const auto path = graph.shortest_path(10, 30);
+
+        REQUIRE(path.size() == 3);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 20);
+        REQUIRE(path[2] == 30);
+
+        const auto reversed_path = graph.shortest_path(30, 10);
+
+        REQUIRE(reversed_path.size() == 3);
+        REQUIRE(reversed_path[0] == 30);
+        REQUIRE(reversed_path[1] == 20);
+        REQUIRE(reversed_path[2] == 10);
+    }
+
+    SECTION("Returns correct path for zero-weight edges")
+    {
+        WeightedGraph<int> graph;
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 2.0);
+        graph.add_edge(20, 30, 0.0);
+
+        const auto path = graph.shortest_path(10, 30);
+
+        REQUIRE(path.size() == 3);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 20);
+        REQUIRE(path[2] == 30);
+    }
+
+    SECTION("Uses updated edge weights")
+    {
+        WeightedGraph<int> graph;
+
+        graph.add_vertex(10);
+        graph.add_vertex(20);
+        graph.add_vertex(30);
+
+        graph.add_edge(10, 20, 10.0);
+        graph.add_edge(10, 30, 2.0);
+        graph.add_edge(30, 20, 3.0);
+
+        const auto path = graph.shortest_path(10, 20);
+
+        REQUIRE(path.size() == 3);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 30);
+        REQUIRE(path[2] == 20);
+
+        graph.add_edge(10, 20, 1.0);
+
+        const auto updated_path = graph.shortest_path(10, 20);
+
+        REQUIRE(updated_path.size() == 2);
+        REQUIRE(updated_path[0] == 10);
+        REQUIRE(updated_path[1] == 20);
+    }
+
+    SECTION("Reconstructs a longer shortest path")
+    {
+        WeightedGraph<int> graph;
+
+        for (int value : {10, 20, 30, 40, 50})
+        {
+            graph.add_vertex(value);
+        }
+
+        graph.add_edge(10, 20, 1.0);
+        graph.add_edge(20, 30, 1.0);
+        graph.add_edge(30, 40, 1.0);
+        graph.add_edge(40, 50, 1.0);
+        graph.add_edge(10, 50, 10.0);
+
+        const auto path = graph.shortest_path(10, 50);
+
+        REQUIRE(path.size() == 5);
+        REQUIRE(path[0] == 10);
+        REQUIRE(path[1] == 20);
+        REQUIRE(path[2] == 30);
+        REQUIRE(path[3] == 40);
+        REQUIRE(path[4] == 50);
     }
 }

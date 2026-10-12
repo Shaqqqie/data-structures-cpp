@@ -2,15 +2,25 @@
 
 #include "DynamicArray.hpp"
 #include "LinkedList.hpp"
+#include "PriorityQueue.hpp"
 
 #include <cstddef>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
+#include <unordered_map>
+#include <utility>
 
 template <typename T>
 class WeightedGraph
 {
 private:
+    struct DijkstraResult
+    {
+        std::unordered_map<T, double> distances;
+        std::unordered_map<T, T> parents;
+    };
+
     struct Edge
     {
         T destination;
@@ -24,6 +34,49 @@ private:
     };
 
     DynamicArray<Vertex> vertices_;
+
+    [[nodiscard]] DijkstraResult dijkstra(const T &start) const
+    {
+        DijkstraResult result;
+        result.distances[start] = 0.0;
+        using Entry = std::pair<double, T>;
+        PriorityQueue<Entry, std::less<Entry>> queue;
+        queue.push({0.0, start});
+
+        while(!queue.empty())
+        {
+            const auto [current_distance, current_vertex] = queue.top();
+            queue.pop();
+
+            if (current_distance > result.distances.at(current_vertex))
+            {
+                continue;
+            }
+
+            for (const auto &vertex : vertices_)
+            {
+                if (current_vertex == vertex.value)
+                {
+                    for (const auto &edge : vertex.neighbors)
+                    {
+                        double new_distance = current_distance + edge.weight;
+
+                        auto it = result.distances.find(edge.destination);
+                        if (it == result.distances.end() || new_distance < it->second)
+                        {
+                            result.distances[edge.destination] = new_distance;
+                            result.parents[edge.destination] = current_vertex;
+                            queue.push({new_distance, edge.destination});
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
 
 public:
     // Construction
@@ -274,5 +327,55 @@ public:
     void clear() noexcept
     {
         vertices_.clear();
+    }
+
+    // Traversal
+    [[nodiscard]] double shortest_distance(const T &start, const T &end) const
+    {
+        if (!contains(start) || !contains(end))
+        {
+            throw std::out_of_range("Vertex does not exist.");
+        }
+
+        DijkstraResult result = dijkstra(start);
+
+        auto it = result.distances.find(end);
+
+        if (it == result.distances.end())
+        {
+            return std::numeric_limits<double>::infinity();
+        }
+
+      
+        return it->second;
+    }
+
+    [[nodiscard]] DynamicArray<T> shortest_path(const T &start, const T &end) const
+    {
+        if (!contains(start) || !contains(end))
+        {
+            throw std::out_of_range("Vertex does not exist.");
+        }
+
+        DijkstraResult result = dijkstra(start);
+        DynamicArray<T> path;
+
+        if (!result.distances.contains(end))
+        {
+            return {};
+        }
+
+        T current = end;
+
+        while(current != start)
+        {
+            path.push_back(current);
+            current = result.parents.at(current);
+        }
+        path.push_back(start);
+
+        std::reverse(path.begin(), path.end());
+
+        return path;
     }
 };
