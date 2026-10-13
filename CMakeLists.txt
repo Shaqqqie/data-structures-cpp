@@ -49,6 +49,7 @@ add_executable(data_structures_tests
     tests/GraphTests.cpp
     tests/HashTableTests.cpp
     tests/WeightedGraphTests.cpp
+    tests/DirectedGraphTests.cpp
 )
 
 target_link_libraries(data_structures_tests PRIVATE

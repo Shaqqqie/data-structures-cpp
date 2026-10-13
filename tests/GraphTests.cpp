@@ -247,7 +247,6 @@ TEST_CASE("Graph add / has edge operations", "[Graph]")
         REQUIRE_FALSE(graph.has_edge(10, 10));
     }
 }
-
 TEST_CASE("Graph remove_edge() operations", "[Graph]")
 {
     SECTION("remove_edge() removes an existing undirected edge")
@@ -324,7 +323,7 @@ TEST_CASE("Graph add_vertex() operations", "[Graph]")
         REQUIRE(graph.vertex_count() == 3);
     }
 
-    SECTION("add_vertex() ignores duplicate")
+    SECTION("add_vertex() ignores duplicates")
     {
         Graph<int> graph;
         graph.add_vertex(10);
